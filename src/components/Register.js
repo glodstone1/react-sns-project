@@ -13,12 +13,71 @@ import {
   IconButton,
 } from '@mui/material';
 import { PhotoCamera } from '@mui/icons-material';
+import { useState } from 'react';
+import { jwtDecode } from 'jwt-decode'; // 토큰 디코딩
+import { useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
 
 function Register() {
-  const [file, setFile] = React.useState(null);
+  const [file, setFile] = useState(null);
+  let titleRef = useRef();
+  let contentRef = useRef();
+  const token = localStorage.getItem("token"); // 로컬 스토리지에서 토큰 꺼내기
+  const navigate = useNavigate();
+  const [fearType, setFearType] = useState("");
+  const sessionUser = jwtDecode(token);
+
 
   const handleFileChange = (event) => {
-    setFile(event.target.files[0]);
+    setFile(event.target.files);
+  };
+
+  const fnUploadFile = (feedId) => {
+    const formData = new FormData();
+    for (let i = 0; i < file.length; i++) {
+      formData.append("file", file[i]); //file=object1&file=object2&file=object...
+    }
+    formData.append("feedId", feedId);
+    fetch("http://localhost:3005/pro-feed/upload", {
+      method: "POST",
+      body: formData
+    })
+      .then(res => res.json())
+      .then(data => {
+        console.log(data);
+        navigate("/feed"); // 원하는 경로
+      })
+      .catch(err => {
+        console.error(err);
+      });
+  };
+
+  const fnRegister = () => {
+    if (!titleRef.current.value || !contentRef.current.value) return alert("모든 항목을 입력해주세요.");
+    if (fearType == "" || fearType == null) return alert("카테고리를 선택해주세요.");
+    fetch("http://localhost:3005/pro-feed", {
+      method: "POST",
+      headers: {
+        "Content-type": "application/json"
+      },
+      body:
+        JSON.stringify({
+          email: sessionUser.email,
+          title: titleRef.current.value,
+          content: contentRef.current.value,
+          type: fearType
+        })
+    })
+      .then(res => res.json())
+      .then(data => {
+        console.log(data);
+        if (file) {
+          fnUploadFile(data.result.insertId);
+        } else {
+          alert("등록되었습니다.");
+          navigate("/feed"); // 원하는 경로
+        }
+      });
   };
 
   return (
@@ -27,59 +86,103 @@ function Register() {
         display="flex"
         flexDirection="column"
         alignItems="center"
-        justifyContent="flex-start" // 상단 정렬
+        justifyContent="flex-start"
         minHeight="100vh"
-        sx={{ padding: '20px' }} // 배경색 없음
+        sx={{
+          padding: '20px',
+          backgroundColor: 'rgba(0,0,0,0.6)',
+          borderRadius: 3,
+          color: '#fff',
+          boxShadow: '0 0 10px rgba(255, 0, 0, 0.3)',
+          backdropFilter: 'blur(5px)'
+        }}
       >
-        <Typography variant="h4" gutterBottom>
-          등록
+        <Typography
+          variant="h4"
+          gutterBottom
+          sx={{ fontFamily: 'Creepster, cursive', color: '#ff1744' }}
+        >
+          👻 등록하기
         </Typography>
 
         <FormControl fullWidth margin="normal">
-          <InputLabel>카테고리</InputLabel>
-          <Select defaultValue="" label="카테고리">
-            <MenuItem value={1}>일상</MenuItem>
-            <MenuItem value={2}>여행</MenuItem>
-            <MenuItem value={3}>음식</MenuItem>
+          <InputLabel sx={{ color: '#fff' }}>카테고리</InputLabel>
+          <Select value={fearType} // 선택된 값 반영
+            onChange={(e) => setFearType(e.target.value)}
+            label="카테고리"
+            sx={{ color: '#fff', borderColor: '#fff' }}>
+            <MenuItem value={"real"}>실화 / 체험담</MenuItem>
+            <MenuItem value={"watch"}>목격담 / 제보</MenuItem>
+            <MenuItem value={"dream"}>꿈 / 예지몽</MenuItem>
+            <MenuItem value={"mystery"}>불가사의 / 미지</MenuItem>
           </Select>
         </FormControl>
 
-        <TextField label="제목" variant="outlined" margin="normal" fullWidth />
         <TextField
+          inputRef={titleRef}
+          label="제목"
+          variant="outlined"
+          margin="normal"
+          fullWidth
+          sx={{ input: { color: '#fff' }, label: { color: '#fff' } }}
+
+        />
+
+        <TextField
+          inputRef={contentRef}
           label="내용"
           variant="outlined"
           margin="normal"
           fullWidth
           multiline
           rows={4}
+          sx={{ textarea: { color: '#fff' }, label: { color: '#fff' } }}
+
         />
 
-        <Box display="flex" alignItems="center" margin="normal" fullWidth>
+        <Box display="flex" alignItems="center" width="100%" mt={2}>
           <input
             accept="image/*"
             style={{ display: 'none' }}
             id="file-upload"
             type="file"
             onChange={handleFileChange}
+            multiple
           />
           <label htmlFor="file-upload">
-            <IconButton color="primary" component="span">
+            <IconButton color="error" component="span">
               <PhotoCamera />
             </IconButton>
           </label>
-          {file && (
+
+          {file && [...file].map((f, idx) => (
             <Avatar
-              alt="첨부된 이미지"
-              src={URL.createObjectURL(file)}
-              sx={{ width: 56, height: 56, marginLeft: 2 }}
+              key={idx}
+              alt={`첨부된 이미지 ${idx + 1}`}
+              src={URL.createObjectURL(f)}
+              sx={{ width: 56, height: 56, marginLeft: 1 ,borderRadius: 0}}
             />
-          )}
-          <Typography variant="body1" sx={{ marginLeft: 2 }}>
+          ))}
+
+          <Typography variant="body1" sx={{ marginLeft: 2, color: '#ccc' }}>
             {file ? file.name : '첨부할 파일 선택'}
           </Typography>
         </Box>
 
-        <Button variant="contained" color="primary" fullWidth style={{ marginTop: '20px' }}>
+        <Button
+          onClick={fnRegister}
+          variant="contained"
+          color="error"
+          fullWidth
+          sx={{
+            marginTop: '20px',
+            fontWeight: 'bold',
+            backgroundColor: '#d50000',
+            '&:hover': {
+              backgroundColor: '#ff1744'
+            }
+          }}
+        >
           등록하기
         </Button>
       </Box>

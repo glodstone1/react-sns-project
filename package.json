@@ -5,6 +5,9 @@
   "dependencies": {
     "@emotion/react": "^11.13.3",
     "@emotion/styled": "^11.13.0",
+    "@fontsource/cinzel": "^5.2.5",
+    "@fontsource/creepster": "^5.2.5",
+    "@fontsource/noto-sans-kr": "^5.2.5",
     "@fontsource/pacifico": "^5.2.5",
     "@mui/icons-material": "^6.1.5",
     "@mui/material": "^6.1.5",
@@ -12,6 +15,7 @@
     "@testing-library/react": "^13.4.0",
     "@testing-library/user-event": "^13.5.0",
     "bcrypt": "^5.1.1",
+    "jwt-decode": "^4.0.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "react-router-dom": "^6.27.0",

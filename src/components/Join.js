@@ -1,19 +1,11 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
-  TextField,
-  Button,
-  Container,
-  Typography,
-  Box,
-  FormControl,
-  FormLabel,
-  RadioGroup,
-  FormControlLabel,
-  Radio
+  TextField, Button, Container, Typography, Box,
+  FormControl, FormLabel, RadioGroup,
+  FormControlLabel, Radio, Paper
 } from '@mui/material';
-import { Link } from 'react-router-dom';
-import { useState } from "react";
-import { useNavigate } from "react-router-dom"; // useNavigate import(페이지 이동을 위해 필요)
+import { Link, useNavigate } from 'react-router-dom';
+import '@fontsource/cinzel'; // 고딕 느낌 폰트 추가
 
 function Join() {
   const [email, setEmail] = useState("");
@@ -23,35 +15,33 @@ function Join() {
   const [nickName, setNickName] = useState("");
   const [intro, setIntro] = useState("");
   const [fearType, setFearType] = useState("");
-  const navigate = useNavigate();  // 페이지 이동을 위한 함수 리턴
+  const navigate = useNavigate();
+
   const fearOptions = [
-    { label: "유령", value: "Ghost" },
-    { label: "실제괴담", value: "Scary Story" },
-    { label: "외계인", value: "Alien" },
-    { label: "폐가", value: "House" }
+    { label: "실화", value: "real" },
+    { label: "목격담", value: "watch" },
+    { label: "꿈", value: "dream" },
+    { label: "불가사의", value: "mystery" }
   ];
 
   const handleLogin = (e) => {
     e.preventDefault();
 
-    if (password != pwdCheck) {
-      alert("비밀번호 확인")
+    if (!email) {
+      alert("이메일 입력 요망");
       return;
     }
+    if (password !== pwdCheck) {
+      alert("비밀번호 확인");
+      return;
+    }
+
     fetch("http://localhost:3005/pro-user/join", {
       method: "POST",
-      headers: {
-        "Content-type": "application/json"
-      },
-      body:
-        JSON.stringify({
-          email: email,
-          pwd: password,
-          userName: userName,
-          nickName: nickName,
-          intro: intro,
-          fearType: fearType
-        })
+      headers: { "Content-type": "application/json" },
+      body: JSON.stringify({
+        email, pwd: password, userName, nickName, intro, fearType
+      })
     })
       .then(res => res.json())
       .then(data => {
@@ -61,100 +51,105 @@ function Join() {
         } else {
           alert(data.message);
         }
-      })
-
-  }
-
+      });
+  };
 
   return (
-    <Container maxWidth="xs">
-      <Box
-        component="form" noValidate autoComplete="off" onSubmit={handleLogin}
-        display="flex"
-        flexDirection="column"
-        alignItems="center"
-        justifyContent="center"
-        minHeight="100vh"
-      >
-        <Typography variant="h4" gutterBottom>
-          회원가입
-        </Typography>
-        <TextField
-          label="이메일*"
-          variant="outlined"
-          margin="normal"
-          fullWidth
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-        />
-        <TextField
-          label="비밀번호*"
-          variant="outlined"
-          margin="normal"
-          fullWidth
-          type="password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
+    <Container maxWidth="xs" sx={{ mt: 8, bgcolor: "#000", minHeight: "100vh" }}>
+      <Paper elevation={0} sx={{
+        p: 4,
+        bgcolor: "#000",
+        color: "#ccc",
+        border: "1px solid #222"
+      }}>
+        <Box component="form" onSubmit={handleLogin} noValidate autoComplete="off">
+          <Typography variant="h4" gutterBottom sx={{
+            fontFamily: 'Cinzel',
+            color: '#e53935',
+            textAlign: "center"
+          }}>
+            새로운 영혼을 초대합니다
+          </Typography>
+          <Typography variant="body2" sx={{ textAlign: "center", mb: 2, color: "#888" }}>
+            여긴 당신의 이야기가 시작되는 곳입니다.
+          </Typography>
 
-        />
-        <TextField
-          label="비밀번호 확인*"
-          variant="outlined"
-          margin="normal"
-          fullWidth
-          type="password"
-          value={pwdCheck}
-          onChange={(e) => setPwdCheck(e.target.value)}
-        />
-        <TextField
-          label="이름*"
-          variant="outlined"
-          margin="normal"
-          fullWidth
-          value={userName}
-          onChange={(e) => setUserName(e.target.value)}
-        />
-        <TextField
-          label="별명*"
-          variant="outlined"
-          margin="normal"
-          fullWidth
-          value={nickName}
-          onChange={(e) => setNickName(e.target.value)}
-        />
-        <TextField
-          label="자기소개*"
-          variant="outlined"
-          margin="normal"
-          fullWidth
-          value={intro}
-          onChange={(e) => setIntro(e.target.value)}
-        />
-        <FormControl component="fieldset" fullWidth margin="normal">
-  <FormLabel component="legend">공포유형*</FormLabel>
-  <RadioGroup
-    row
-    value={fearType}
-    onChange={(e) => setFearType(e.target.value)}
-  >
-    {fearOptions.map((item) => (
-      <FormControlLabel
-        key={item.value}
-        value={item.value}           // 👉 저장될 값: 영어
-        control={<Radio />}
-        label={item.label}           // 👉 화면에 보이는 라벨: 한글
-      />
-    ))}
-  </RadioGroup>
-</FormControl>
+          <TextField
+            label="이메일*"
+            fullWidth margin="normal"
+            InputLabelProps={{ style: { color: '#888' } }}
+            InputProps={{ style: { color: '#eee', backgroundColor: "#111" } }}
+            value={email} onChange={(e) => setEmail(e.target.value)}
+          />
+          <TextField
+            label="비밀번호*"
+            type="password"
+            fullWidth margin="normal"
+            InputLabelProps={{ style: { color: '#888' } }}
+            InputProps={{ style: { color: '#eee', backgroundColor: "#111" } }}
+            value={password} onChange={(e) => setPassword(e.target.value)}
+          />
+          <TextField
+            label="비밀번호 확인*"
+            type="password"
+            fullWidth margin="normal"
+            InputLabelProps={{ style: { color: '#888' } }}
+            InputProps={{ style: { color: '#eee', backgroundColor: "#111" } }}
+            value={pwdCheck} onChange={(e) => setPwdCheck(e.target.value)}
+          />
+          <TextField
+            label="이름*"
+            fullWidth margin="normal"
+            InputLabelProps={{ style: { color: '#888' } }}
+            InputProps={{ style: { color: '#eee', backgroundColor: "#111" } }}
+            value={userName} onChange={(e) => setUserName(e.target.value)}
+          />
+          <TextField
+            label="별명*"
+            fullWidth margin="normal"
+            InputLabelProps={{ style: { color: '#888' } }}
+            InputProps={{ style: { color: '#eee', backgroundColor: "#111" } }}
+            value={nickName} onChange={(e) => setNickName(e.target.value)}
+          />
+          <TextField
+            label="자기소개*"
+            fullWidth margin="normal"
+            InputLabelProps={{ style: { color: '#888' } }}
+            InputProps={{ style: { color: '#eee', backgroundColor: "#111" } }}
+            value={intro} onChange={(e) => setIntro(e.target.value)}
+          />
 
-        <Button type="submit" variant="contained" color="primary" fullWidth style={{ marginTop: '20px' }}>
-          회원가입
-        </Button>
-        <Typography variant="body2" style={{ marginTop: '10px' }}>
-          이미 회원이라면? <Link to="/prologin">로그인</Link>
-        </Typography>
-      </Box>
+          <FormControl component="fieldset" fullWidth margin="normal">
+            <FormLabel sx={{ color: "#aaa", mb: 1 }}>공포유형*</FormLabel>
+            <RadioGroup
+              row
+              value={fearType}
+              onChange={(e) => setFearType(e.target.value)}
+            >
+              {fearOptions.map((item) => (
+                <FormControlLabel
+                  key={item.value}
+                  value={item.value}
+                  control={<Radio sx={{ color: "#e53935" }} />}
+                  label={<Typography sx={{ color: "#ccc" }}>{item.label}</Typography>}
+                />
+              ))}
+            </RadioGroup>
+          </FormControl>
+
+          <Button
+            type="submit"
+            fullWidth
+            sx={{ mt: 3, bgcolor: "#b71c1c", color: "#fff", '&:hover': { bgcolor: "#7f0000" } }}
+          >
+            가입하기
+          </Button>
+
+          <Typography variant="body2" sx={{ mt: 2, textAlign: "center", fontSize: "0.8rem", color: "#777" }}>
+            이미 어둠에 발을 들이셨나요? <Link to="/prologin" style={{ color: "#e53935" }}>로그인</Link>
+          </Typography>
+        </Box>
+      </Paper>
     </Container>
   );
 }
