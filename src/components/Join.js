@@ -55,12 +55,16 @@ function Join() {
   };
 
   return (
-    <Container maxWidth="xs" sx={{ mt: 8, bgcolor: "#000", minHeight: "100vh" }}>
+    <Container maxWidth="xs" sx={{ mt: 8}}>
       <Paper elevation={0} sx={{
         p: 4,
-        bgcolor: "#000",
-        color: "#ccc",
-        border: "1px solid #222"
+        color: "#ccc", // 텍스트 흐리게
+        border: "1px solid #222", // 카드 경계만 흐릿하게
+        padding: '20px',
+        backgroundColor: 'rgba(0,0,0,0.6)', // 카드 배경도 검정
+        borderRadius: 3,
+        boxShadow: '0 0 10px rgba(255, 0, 0, 0.3)',
+        backdropFilter: 'blur(5px)'
       }}>
         <Box component="form" onSubmit={handleLogin} noValidate autoComplete="off">
           <Typography variant="h4" gutterBottom sx={{

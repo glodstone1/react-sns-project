@@ -21,154 +21,170 @@ import {
   ListItemText,
   ListItemAvatar,
   Avatar,
+  Divider,
+  ImageList,
+  ImageListItem,
+  InputLabel,
+  FormControl,
+  Select,
+  MenuItem,
 } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import { darken } from '@mui/system';
 
-const mockFeeds = [
-  {
-    id: 1,
-    title: '폐가에서 들려온 속삭임',
-    description: '한밤중 폐가를 지나던 중, 누군가의 속삭임이 들렸다. 하지만 그곳엔 아무도 없었다...',
-    image: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQ8u1gUw85nL-aRmCjU4PjH9qX0__VOOhPaseQG5oQzx1OxjtBXtTolzxi83glF-K9AwNc&usqp=CAU',
-  },
-  {
-    id: 2,
-    title: '거울 속의 나',
-    description: '거울을 봤는데, 나와 눈을 마주친 그 존재는 나보다 먼저 웃고 있었다.',
-    image: 'https://us.123rf.com/450wm/zeferli/zeferli1802/zeferli180200067/95115617-%EC%96%B4%EB%91%90%EC%9A%B4-%ED%86%A4%EB%90%9C-%EC%95%88%EA%B0%9C-%EB%B0%B0%EA%B2%BD%EC%97%90%EC%84%9C-%EC%98%A4%EB%9E%98-%EB%90%9C-%EC%86%8C-%EB%A6%84-%EC%84%AC%EB%9C%A9%ED%95%9C-%EB%82%98%EB%AC%B4-%EC%95%84%EA%B8%B0-%EC%B9%A8%EB%8C%80-%EA%B3%B5%ED%8F%AC-%EA%B0%9C%EB%85%90-%EC%96%B4%EB%91%A0-%EC%86%8D%EC%97%90%EC%84%9C-%EB%AC%B4%EC%84%9C%EC%9A%B4-%EC%95%84%EA%B8%B0%EC%99%80-%EC%B9%A8%EB%8C%80-%EC%8B%A4%EB%A3%A8%EC%97%A3%EC%9E%85%EB%8B%88%EB%8B%A4-%ED%95%A0%EB%A1%9C%EC%9C%88-%EC%9E%A5%EC%8B%9D-%EC%83%B7-%EC%84%A0%ED%83%9D%EC%A0%81.jpg?ver=6',
-  },
-  {
-    id: 3,
-    title: '혼자 사는 집에서 울린 발소리',
-    description: '새벽 3시. 혼자 있는 집에서 천천히 걸어오는 발소리가 들렸다. 경찰은 아무도 없었다고 했다.',
-    image: 'https://www.shutterstock.com/image-photo/scary-shadow-mirror-halloween-concept-260nw-1541764574.jpg',
-  },
-  {
-    id: 4,
-    title: '문틈 아래서 보인 손',
-    description: '잠들기 전 방문 아래 틈 사이로 손가락이 들어왔다. 가족들은 모두 자고 있었다.',
-    image: 'https://us.123rf.com/450wm/yupachingping/yupachingping2001/yupachingping200100096/138068580-horror-strzela-do-r%C4%99ki-kobiety-spod-%C5%82%C3%B3%C5%BCka-bia%C5%82ym-tonem.jpg',
-  },
-  {
-    id: 5,
-    title: '사진 속 낯선 얼굴',
-    description: '친구들과 찍은 사진을 확인하던 중, 누구도 기억하지 못하는 여자의 얼굴이 한가운데 있었다.',
-    image: 'https://i.ytimg.com/vi/_BexwGz4Q64/hqdefault.jpg',
-  },
-  {
-    id: 6,
-    title: '계속 울리는 전화',
-    description: '받자마자 끊어지는 전화가 20분마다 울렸다. 발신자는 5년 전 실종된 내 친구였다.',
-    image: 'https://theghostinmymachine.com/wp-content/uploads/2020/09/antiques-4274002_1920-1024x680.jpg',
-  },
-  {
-    id: 7,
-    title: '침대 밑의 얼굴',
-    description: '침대 밑에서 이상한 냄새가 나 확인했다. 어두운 밑바닥에서 누군가 날 바라보고 있었다.',
-    image: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRpMH3RWLoqijFTbFkonxsyph6ZbkgYVP2tsg&s',
-  }
-];
 
 function Feed() {
   const [open, setOpen] = useState(false);
   const [selectedFeed, setSelectedFeed] = useState(null);
   const [comments, setComments] = useState([]);
+  const [testComm, setTestComm] = useState([]);
   const [newComment, setNewComment] = useState('');
   const [feedList, setFeedList] = useState();
   const [imgList, setImgList] = useState();
+  const [fearType, setFearType] = useState("all");
 
-  const fnFeedList = () => {
-    fetch("http://localhost:3005/pro-feed/list")
+  const fnFeedList = (fearType) => {
+    if (fearType == 'all') {
+      fearType = ""
+    }
+    fetch("http://localhost:3005/pro-feed/list?type=" + fearType)
       .then(res => res.json())
       .then(data => setFeedList(data.list));
-
   }
 
+
+
   useEffect(() => {
-    fnFeedList();
-    console.log("무셔운이야기", fnFeedList())
+    fnFeedList(fearType);
   }, [])
 
   const handleClickOpen = (feed) => {
-    setSelectedFeed(feed);
+    fetch("http://localhost:3005/pro-feed/" + feed.POST_ID)
+      .then(res => res.json())
+      .then(data => {
+        setSelectedFeed(data.feed);
+        setImgList(data.imgList);
+        setTestComm(data.commList);
+
+      })
+
+
     setOpen(true);
-    setComments([
-      { id: 'ghosthunter', text: '이 이야기 너무 소름 끼쳐요!' },
-      { id: 'nightwalker', text: '진짜였으면 너무 무서울 듯...' },
-    ]);
-    setNewComment('');
+    // setComments([
+    //   { id: 'user1', text: '멋진 사진이에요!' },
+    //   { id: 'user2', text: '이 장소에 가보고 싶네요!' },
+    //   { id: 'user3', text: '아름다운 풍경이네요!' },
+    // ]); // 샘플 댓글 추가
+    setNewComment(''); // 댓글 입력 초기화
   };
 
   const handleClose = () => {
     setOpen(false);
     setSelectedFeed(null);
     setComments([]);
+    setTestComm([]);
   };
 
-  const handleAddComment = () => {
-    if (newComment.trim()) {
-      setComments([...comments, { id: 'currentUser', text: newComment }]);
-      setNewComment('');
-    }
+  const handleAddComment = (newComment) => {
+    fetch("http://localhost:3005/pro-feed", {
+      method: "POST",
+      headers: {
+        "Content-type": "application/json"
+      },
+      body:
+        JSON.stringify({
+        })
+    })
+      .then(res => res.json())
+      .then(data => {
+        console.log(data);
+      });
   };
+
+  // const handleAddComment = () => {
+  //   if (newComment.trim()) {
+  //     setComments([...comments, { id: 'currentUser', text: newComment }]);
+  //     setTestComm([...testComm, { id: testComm.NICK_NAME, text: newComment }]);
+  //     setNewComment('');
+  //   }
+  // };
 
   return (
-    <Container maxWidth="md" sx={{ bgcolor: '#121212', color: '#f0f0f0', minHeight: '100vh', py: 4 }}>
+    <Container maxWidth="md" sx={{
+      bgcolor: '#121212', color: '#f0f0f0', minHeight: '100vh', py: 4,
+      padding: '20px',
+      backgroundColor: 'rgba(0,0,0,0.6)',
+      borderRadius: 3,
+      color: '#fff',
+      boxShadow: '0 0 10px rgba(255, 0, 0, 0.3)',
+      backdropFilter: 'blur(5px)'
+    }}>
       <AppBar position="static" sx={{ bgcolor: '#1b1b1b' }}>
         <Toolbar>
           <Typography variant="h5" sx={{ fontFamily: 'Creepster, cursive', letterSpacing: 2 }}>GhostFeed</Typography>
         </Toolbar>
       </AppBar>
-
-      <Box mt={4}>
+      <FormControl fullWidth margin="normal">
+        <InputLabel sx={{ color: '#fff' }}>카테고리</InputLabel>
+        <Select value={fearType} // 선택된 값 반영
+          onChange={(e) => {
+            const selected = e.target.value;
+            setFearType(selected);
+            fnFeedList(selected); // ✅ 정확하게 넘기기
+          }}
+          label="카테고리"
+          sx={{ color: '#fff', borderColor: '#fff' }}>
+          <MenuItem value={"all"}>전체</MenuItem>
+          <MenuItem value={"real"}>실화 / 체험담</MenuItem>
+          <MenuItem value={"watch"}>목격담 / 제보</MenuItem>
+          <MenuItem value={"dream"}>꿈 / 예지몽</MenuItem>
+          <MenuItem value={"mystery"}>불가사의 / 미지</MenuItem>
+        </Select>
+      </FormControl>
+      <Box
+        display="flex"
+        flexWrap="wrap"
+        justifyContent="center"
+        gap={3}
+      >
         {feedList && feedList.map((feed) => (
-          <Grid2 xs={12} sm={6} md={4} key={feed.id}>
-            <Card>
+          <Box key={feed.POST_ID}
+            sx={{ width: 300 }}
+          >
+            {/* ✅ 카드 너비 고정 (300px) */}
+            <Card sx={{
+              bgcolor: '#1e1e1e', color: '#fff',
+              cursor: 'pointer',
+              filter: 'brightness(70%)',
+              '&:hover': { filter: 'brightness(90%)' }
+            }} onClick={() => handleClickOpen(feed)}>
               <CardMedia
                 component="img"
                 height="200"
                 image={
                   feed.IMG_PATH && feed.IMG_NAME
                     ? "http://localhost:3005/" + feed.IMG_PATH + feed.IMG_NAME
-                    : "/default-image.jpg" // 기본 이미지 경로 (public 폴더 안에 있어야 함) 기본 사진 올리기!!!
+                    : "/no-image.png" // ✅ 기본 이미지 (public 폴더에 위치)
                 }
-                alt={feed.title}
-                onClick={() => handleClickOpen(feed)}
-                style={{ cursor: 'pointer' }}
+                alt={feed.POST_TITLE}
               />
               <CardContent>
-                <Typography variant="body2" color="textSecondary">
-                  {feed.title}
+                <Typography variant="body2" color="text.secondary">
+                  {feed.POST_TITLE}
+                </Typography>
+                <Typography variant="body2" color="text.secondary">
+                  {feed.NICK_NAME}
                 </Typography>
               </CardContent>
             </Card>
-          </Grid2>
+          </Box>
         ))}
-
-
-        {/* <Box display="flex" gap={3} flexWrap="wrap" justifyContent="center">
-          {mockFeeds.map((feed) => (
-            <Card key={feed.id} sx={{ width: 300, bgcolor: '#1e1e1e', color: '#fff' }}>
-              <CardMedia
-                component="img"
-                height="200"
-                image={feed.image}
-                alt={feed.title}
-                onClick={() => handleClickOpen(feed)}
-                sx={{ cursor: 'pointer', filter: 'brightness(70%)', '&:hover': { filter: 'brightness(90%)' } }}
-              />
-              <CardContent>
-                <Typography variant="h6">{feed.title}</Typography>
-              </CardContent>
-            </Card>
-          ))}
-        </Box> */}
       </Box>
 
-      <Dialog open={open} onClose={handleClose} fullWidth maxWidth="lg">
+
+      <Dialog open={open} onClose={handleClose} fullWidth maxWidth="lg" scroll="paper">
         <DialogTitle sx={{ bgcolor: '#1b1b1b', color: '#fff' }}>
-          {selectedFeed?.title}
+          {selectedFeed?.POST_TITLE}
           <IconButton
             edge="end"
             onClick={handleClose}
@@ -178,27 +194,62 @@ function Feed() {
           </IconButton>
         </DialogTitle>
         <DialogContent sx={{ display: 'flex', bgcolor: '#121212', color: '#f0f0f0' }}>
-          <Box sx={{ flex: 1 }}>
-            <Typography variant="body1">{selectedFeed?.description}</Typography>
-            {selectedFeed?.image && (
-              <img
-                src={selectedFeed.image}
-                alt={selectedFeed.title}
-                style={{ width: '100%', marginTop: '10px', borderRadius: '10px' }}
-              />
+          <Box sx={{ flex: 1, overflowY: 'auto', pr: 2 }}>
+            <Typography variant="body1" gutterBottom>
+              {selectedFeed?.POST_CONTENT}
+            </Typography>
+
+            {imgList && imgList.length > 0 && (
+              <Box mt={2}>
+                {imgList.map((item, index) => (
+                  <Box key={index} mb={2}>
+                    <img
+                      src={`http://localhost:3005/${item.IMG_PATH}${item.IMG_NAME}`}
+                      alt={item.IMG_NAME}
+                      style={{
+                        width: '100%',
+                        height: 'auto',
+                        borderRadius: '8px',
+                        boxShadow: '0 2px 8px rgba(0,0,0,0.5)',
+                      }}
+                    />
+                  </Box>
+                ))}
+              </Box>
             )}
           </Box>
 
-          <Box sx={{ width: '300px', marginLeft: '20px' }}>
+          <Box sx={{ width: '300px', marginLeft: '20px', flexShrink: 0 }}>
             <Typography variant="h6">👻 댓글</Typography>
             <List>
-              {comments.map((comment, index) => (
-                <ListItem key={index} sx={{ color: '#ddd' }}>
-                  <ListItemAvatar>
-                    <Avatar sx={{ bgcolor: '#333' }}>{comment.id.charAt(0).toUpperCase()}</Avatar>
-                  </ListItemAvatar>
-                  <ListItemText primary={comment.text} secondary={comment.id} />
-                </ListItem>
+              {testComm.map((testComm, index) => (
+                <React.Fragment key={index}>
+                  <ListItem sx={{ color: '#ddd', alignItems: 'flex-start' }}>
+                    <ListItemAvatar>
+                      <Avatar
+                        src={testComm.PROFILE_IMG ? "http://localhost:3005/" + testComm.PROFILE_IMG : ""}
+                        sx={{
+                          width: 60,
+                          height: 60,
+                          marginTop: '4px', // ✅ 프로필 사진 아래로 약간 내림
+                          border: '2px solid #ff1744',
+                          cursor: 'pointer'
+                        }}
+                      >
+                        {testComm.NICK_NAME.charAt(0).toUpperCase()}
+                      </Avatar>
+                    </ListItemAvatar>
+
+                    <ListItemText
+                      sx={{ ml: 2 }}
+                      primary={testComm.NICK_NAME}
+                      secondary={testComm.CONTENT}
+                    />
+                  </ListItem>
+
+                  {/* ✅ 댓글 사이에 구분선 */}
+                  <Divider variant="inset" component="li" sx={{ borderColor: '#444' }} />
+                </React.Fragment>
               ))}
             </List>
             <TextField

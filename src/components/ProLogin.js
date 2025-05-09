@@ -48,20 +48,24 @@ export default function ProLogin() {
   };
 
   return (
-    <Container maxWidth="xs" sx={{ mt: 15, bgcolor: "#000", height: "46vh"}}>
+    <Container maxWidth="xs" 
+    sx={{ mt: 18}}>
       <Paper elevation={0} sx={{
         p: 4,
-        bgcolor: "#000", // 카드 배경도 검정
         color: "#ccc", // 텍스트 흐리게
         border: "1px solid #222", // 카드 경계만 흐릿하게
-        boxShadow: "none"
+        padding: '20px',
+        backgroundColor: 'rgba(0,0,0,0.6)', // 카드 배경도 검정
+        borderRadius: 3,
+        boxShadow: '0 0 10px rgba(255, 0, 0, 0.3)',
+        backdropFilter: 'blur(5px)'
       }}>
         <Box sx={{ textAlign: "center", mb: 2 }}>
           <Typography variant="h4" sx={{ fontFamily: 'Cinzel', color: "#e53935" }}>
           이 얘기, 해도 될까?
           </Typography>
           <Typography sx={{ fontSize: "0.9rem", color: "#888" }}>
-            어둠 속의 속삭임... 당신도 들리시나요?
+            남들에게 하지 못한 이야기... 당신에게도 뭔가가 있나요?
           </Typography>
         </Box>
         <Box component="form" noValidate autoComplete="off" onSubmit={handleLogin}>
