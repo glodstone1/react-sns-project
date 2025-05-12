@@ -10,6 +10,13 @@ function MyPage() {
   let [open, setOpen] = useState(false); // 프로필 사진 오픈용 선언
   let [imgUrl, setImgUrl] = useState();
   let [insertFile, setFile] = useState();
+
+  let [followerCount, setFollowerCount] = useState(0);
+  let [followingCount, setFollowingCount] = useState(0);
+  let [postCount, setPostCount] = useState(0);
+  const [myPosts, setMyPosts] = useState([]);
+
+
   const navigate = useNavigate();
   const token = localStorage.getItem("token"); // 로컬 스토리지에서 토큰 꺼내기
   const fnUserInfo = () => {
@@ -50,38 +57,103 @@ function MyPage() {
       });
   }
 
+  const MyPageStat = () => {
+    const sessionUser = jwtDecode(token);
+    fetch("http://localhost:3005/pro-user/mypage-stat?email=" + sessionUser.email)
+      .then(res => res.json())
+      .then(data => {
+        setFollowerCount(data.follower_count);
+        setFollowingCount(data.following_count);
+        setPostCount(data.post_count);
+        console.log("마이페이지 통계", data);
+      });
+  };
+
+  const fetchMyPosts = () => {
+    const sessionUser = jwtDecode(token);
+    fetch("http://localhost:3005/pro-user/posts?email=" + sessionUser.email)
+      .then(res => res.json())
+      .then(data => {
+        setMyPosts(data.posts);
+      })
+      .catch(err => {
+        console.error("게시글 목록 에러", err.message);
+      });
+  };
+
+  const handleDeletePost = (postId) => {
+    if (!window.confirm("정말 이 게시글을 삭제하시겠습니까?")) return;
+
+    fetch("http://localhost:3005/pro-feed/" + postId, {
+      method: "DELETE",
+      headers: {
+        "Authorization": "Bearer " + localStorage.getItem("token") // ✅ 토큰 포함
+      }
+    })
+      .then(res => res.json())
+      .then(data => {
+        if (data.success) {
+          alert("삭제되었습니다.");
+          fetchMyPosts(); // 목록 새로고침
+          MyPageStat();   // 게시글 수 갱신
+        } else {
+          alert("삭제에 실패했습니다.");
+        }
+      })
+      .catch(err => {
+        console.error("삭제 오류:", err);
+        alert("오류가 발생했습니다.");
+      });
+  };
+
+
   useEffect(() => {
     if (!token) {
       alert("이야기를 보고싶다면 가입하세요.")
       navigate("/prologin");
-    }else{
+    } else {
       fnUserInfo();
+      MyPageStat();
+      fetchMyPosts(); // ✅ 게시글 목록도 불러오기
     }
   }, [])
 
   return (
-    <Container maxWidth="md" sx={{ backgroundColor: '#000', minHeight: '100vh', color: '#fff', paddingTop: '20px' }}>
+    <Container maxWidth="md"
+      sx={{
+        backgroundColor: 'rgba(0,0,0,0.6)',
+        minHeight: '130vh',
+        color: '#fff',
+        paddingTop: '20px',
+        height: 'auto',
+        borderRadius: 3,
+        backdropFilter: 'blur(1px)',
+      }}>
       <Box
         display="flex"
         flexDirection="column"
         alignItems="center"
         justifyContent="flex-start"
-        minHeight="100vh"
+        minHeight="50vh"
+
       >
         <Paper
           sx={{
-            backgroundColor: '#1a1a1a',
+            backgroundColor: 'rgba(0,0,0,0.6)',
             padding: '30px',
             borderRadius: '15px',
             width: '100%',
             color: '#fff',
+            boxShadow: '0 0 10px rgba(255, 0, 0, 0.3)',
+            backdropFilter: 'blur(5px)',
+            marginBottom: 2 // ✅ 게시글 목록과 너무 떨어져서 간격 붙이기 위해 margin 추가
           }}
         >
           {/* 프로필 */}
           <Box display="flex" flexDirection="column" alignItems="center" sx={{ marginBottom: 3 }}>
             <Avatar
               alt="프로필 이미지"
-              src={info.PROFILE_IMG ? "http://localhost:3005/" + info.PROFILE_IMG : "https://images.unsplash.com/photo-1551963831-b3b1ca40c98e"} // 프로필 이미지 경로
+              src={info.PROFILE_IMG ? "http://localhost:3005/" + info.PROFILE_IMG : ""} // 프로필 이미지 경로
               sx={{ width: 120, height: 120, marginBottom: 2, border: '2px solid #ff1744', cursor: 'pointer' }}
               onClick={() => { setOpen(!open) }}
             />
@@ -93,15 +165,21 @@ function MyPage() {
           <Grid container spacing={2} sx={{ marginTop: 2 }}>
             <Grid item xs={4} textAlign="center">
               <Typography variant="h6" sx={{ color: '#fff' }}>👁️ 추종자</Typography>
-              <Typography variant="body1" sx={{ color: '#fff' }}>150</Typography>
+              <Typography variant="body1" sx={{ color: '#fff', cursor: 'pointer' }}>
+                {followerCount}
+              </Typography>
             </Grid>
             <Grid item xs={4} textAlign="center">
               <Typography variant="h6" sx={{ color: '#fff' }}>🕯️ 동행자</Typography>
-              <Typography variant="body1" sx={{ color: '#fff' }}>100</Typography>
+              <Typography variant="body1" sx={{ color: '#fff', cursor: 'pointer' }}>
+                {followingCount}
+              </Typography>
             </Grid>
             <Grid item xs={4} textAlign="center">
               <Typography variant="h6" sx={{ color: '#fff' }}>📜 기록</Typography>
-              <Typography variant="body1" sx={{ color: '#fff' }}>50</Typography>
+              <Typography variant="body1" sx={{ color: '#fff', cursor: 'pointer' }}>
+                {postCount}
+              </Typography>
             </Grid>
           </Grid>
 
@@ -159,6 +237,74 @@ function MyPage() {
             }}>취소</Button>
           </DialogActions>
         </Dialog>
+      </Box>
+
+      <Box sx={{ marginTop: 0 }}>
+        <Typography variant="h6" sx={{ color: '#ff1744' }}>🧾 나의 기록</Typography>
+        {myPosts.length === 0 ? (
+          <Typography variant="body2" sx={{ color: '#ccc' }}>작성한 게시글이 없습니다.</Typography>
+        ) : (
+          myPosts.map(post => (
+            <Box
+              key={post.POST_ID}
+              onClick={() => navigate("/post/" + post.POST_ID)}
+              sx={{
+                display: 'flex',
+                justifyContent: 'space-between', // ✅ 좌우로 분리
+                alignItems: 'center',
+                marginTop: 2,
+                padding: 2,
+                backgroundColor: '#222',
+                borderRadius: 2,
+                cursor: 'pointer',
+                '&:hover': { backgroundColor: '#333' }
+              }}
+            >
+              {/* 왼쪽: 썸네일 + 제목 */}
+              <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                {post.IMG_NAME && (
+                  <img
+                    src={`http://localhost:3005/${post.IMG_PATH}${post.IMG_NAME}`}
+                    alt="썸네일"
+                    style={{
+                      width: 120,
+                      height: 120,
+                      objectFit: 'cover',
+                      marginRight: 20,
+                      borderRadius: 6
+                    }}
+                  />
+                )}
+                <Box>
+                  <Typography variant="h6" sx={{ color: '#fff' }}>{post.POST_TITLE}</Typography>
+                  <Typography variant="caption" sx={{ color: '#999' }}>{post.CDATE_TIME}</Typography>
+                </Box>
+              </Box>
+
+              {/* 오른쪽: 수정/삭제 버튼 (기능 없음) */}
+              <Box
+                sx={{
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: 1
+                }}
+                onClick={(e) => e.stopPropagation()} // ✅ 클릭 시 post 상세 이동 막음
+              >
+                <Button
+                  variant="outlined"
+                  size="small"
+                  color="warning"
+                  onClick={() => navigate("/edit", { state: post })} // ✅ 클릭 시 수정 페이지로 이동
+                >
+                  ✏️ 수정
+                </Button>
+                <Button variant="outlined" size="small" color="error" onClick={() => handleDeletePost(post.POST_ID)}>
+                  🗑️ 삭제
+                </Button>
+              </Box>
+            </Box>
+          ))
+        )}
       </Box>
     </Container>
   );

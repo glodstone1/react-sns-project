@@ -12,6 +12,7 @@ import Register from './components/Register';
 import MyPage from './components/MyPage';
 import Menu from './components/Menu';
 import Header from './components/Header'; // ✅ 헤더 추가
+import FeedDetail from './components/FeedDetail';
 
 const darkTheme = createTheme({
   palette: {
@@ -116,6 +117,8 @@ function App() {
               <Route path="/join" element={<Join />} />
               <Route path="/register" element={<Register />} />
               <Route path="/mypage" element={<MyPage />} />
+              <Route path="/post/:id" element={<FeedDetail />} />
+              <Route path="/edit" element={<Register editMode={true} postData={location.state} />} />
               {/* 👉 추후 프로필 등 경로 추가 가능 */}
             </Routes>
           </Box>

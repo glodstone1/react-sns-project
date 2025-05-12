@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect, useRef, } from 'react';
 import {
   TextField,
   Button,
@@ -13,12 +13,10 @@ import {
   IconButton,
 } from '@mui/material';
 import { PhotoCamera } from '@mui/icons-material';
-import { useState } from 'react';
 import { jwtDecode } from 'jwt-decode'; // 토큰 디코딩
-import { useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useParams, useLocation } from 'react-router-dom'; // ✅ useParams, useLocation 추가
 
-function Register() {
+function Register() { // ✅ editMode와 postData prop 추가
   const [file, setFile] = useState(null);
   let titleRef = useRef();
   let contentRef = useRef();
@@ -26,7 +24,19 @@ function Register() {
   const navigate = useNavigate();
   const [fearType, setFearType] = useState("");
   const sessionUser = jwtDecode(token);
+  const location = useLocation();
+  const postData = location.state;
+  const editMode = !!postData; // postData가 있으면 수정 모드
 
+  // ✅ 수정 모드일 경우 초기값 세팅
+  useEffect(() => {
+    console.log("postData.POST_TYPE:", postData?.POST_Id); // 여기 확인
+    if (editMode && postData) {
+      titleRef.current.value = postData.POST_TITLE;
+      contentRef.current.value = postData.POST_CONTENT;
+      setFearType(postData.POST_TYPE || ""); // 'real', 'dream', 'watch', 'mystery' 중 하나
+    }
+  }, [editMode, postData]);
 
   const handleFileChange = (event) => {
     setFile(event.target.files);
@@ -45,7 +55,8 @@ function Register() {
       .then(res => res.json())
       .then(data => {
         console.log(data);
-        navigate("/feed"); // 원하는 경로
+        alert(editMode ? "수정되었습니다." : "등록되었습니다.");
+        navigate("/feed");
       })
       .catch(err => {
         console.error(err);
@@ -80,6 +91,32 @@ function Register() {
       });
   };
 
+  const fnUpdate = () => { // ✅ 수정 함수 추가
+    if (!titleRef.current.value || !contentRef.current.value) return alert("모든 항목을 입력해주세요.");
+    if (!postData) return;
+
+    fetch("http://localhost:3005/pro-feed/" + postData.POST_ID, {
+      method: "PUT",
+      headers: {
+        "Content-type": "application/json"
+      },
+      body: JSON.stringify({
+        title: titleRef.current.value,
+        content: contentRef.current.value,
+        type: fearType
+      })
+    })
+      .then(res => res.json())
+      .then(data => {
+        if (file) {
+          fnUploadFile(postData.POST_ID);
+        } else {
+          alert("수정되었습니다.");
+          navigate("/post/" + postData.POST_ID);
+        }
+      });
+  };
+
   return (
     <Container maxWidth="sm">
       <Box
@@ -102,15 +139,17 @@ function Register() {
           gutterBottom
           sx={{ fontFamily: 'Creepster, cursive', color: '#ff1744' }}
         >
-          👻 등록하기
+          {editMode ? "👻 수정하기" : "👻 등록하기"} {/* ✅ 제목 분기 */}
         </Typography>
 
         <FormControl fullWidth margin="normal">
           <InputLabel sx={{ color: '#fff' }}>카테고리</InputLabel>
-          <Select value={fearType} // 선택된 값 반영
+          <Select
+            value={fearType || ""} // ⚠️ 항상 controlled 상태 유지
             onChange={(e) => setFearType(e.target.value)}
             label="카테고리"
-            sx={{ color: '#fff', borderColor: '#fff' }}>
+            sx={{ color: '#fff', borderColor: '#fff' }}
+          >
             <MenuItem value={"real"}>실화 / 체험담</MenuItem>
             <MenuItem value={"watch"}>목격담 / 제보</MenuItem>
             <MenuItem value={"dream"}>꿈 / 예지몽</MenuItem>
@@ -125,7 +164,6 @@ function Register() {
           margin="normal"
           fullWidth
           sx={{ input: { color: '#fff' }, label: { color: '#fff' } }}
-
         />
 
         <TextField
@@ -137,7 +175,6 @@ function Register() {
           multiline
           rows={4}
           sx={{ textarea: { color: '#fff' }, label: { color: '#fff' } }}
-
         />
 
         <Box display="flex" alignItems="center" width="100%" mt={2}>
@@ -160,7 +197,7 @@ function Register() {
               key={idx}
               alt={`첨부된 이미지 ${idx + 1}`}
               src={URL.createObjectURL(f)}
-              sx={{ width: 56, height: 56, marginLeft: 1 ,borderRadius: 0}}
+              sx={{ width: 56, height: 56, marginLeft: 1, borderRadius: 0 }}
             />
           ))}
 
@@ -170,7 +207,7 @@ function Register() {
         </Box>
 
         <Button
-          onClick={fnRegister}
+          onClick={editMode ? fnUpdate : fnRegister} // ✅ 등록/수정 분기
           variant="contained"
           color="error"
           fullWidth
@@ -183,7 +220,7 @@ function Register() {
             }
           }}
         >
-          등록하기
+          {editMode ? "수정하기" : "등록하기"}
         </Button>
       </Box>
     </Container>
