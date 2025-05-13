@@ -36,59 +36,18 @@ function Feed() {
     fnFeedList(fearType);
   }, []);
 
-  const handleClickOpen = (feed) => {
-    fetch("http://localhost:3005/pro-feed/" + feed.POST_ID)
-      .then(res => res.json())
-      .then(data => {
-        setSelectedFeed(data.feed);
-        setImgList(data.imgList);
-        // ✅ 정렬: 댓글 ID 오름차순으로 (부모 다음에 자식이 오게)
-        const sorted = data.commList.sort((a, b) => a.COMMENT_ID - b.COMMENT_ID);
-        setComments(sorted);
-      });
-    setOpen(true);
-    setNewComment('');
-    setReplyTarget(null);
-  };
-
-  const handleClose = () => {
-    setOpen(false);
-    setSelectedFeed(null);
-    setComments([]);
-    setReplyTarget(null);
-  };
-
-  const handleAddComment = (postId, parentId = null) => {
-    if (!newComment.trim()) {
-      alert("댓글을 작성해주십시오.");
-      return;
-    }
-    fetch("http://localhost:3005/pro-feed/comment", {
-      method: "POST",
-      headers: { "Content-type": "application/json" },
-      body: JSON.stringify({
-        postId: postId,
-        comment: newComment,
-        email: sessionUser.email,
-        parentId: parentId
-      })
-    })
-      .then(res => res.json())
-      .then(data => {
-        alert(data.message);
-        setNewComment('');
-        setReplyTarget(null);
-        fetch("http://localhost:3005/pro-feed/" + postId)
-          .then(res => res.json())
-          .then(data => {
-            const sorted = data.commList.sort((a, b) => a.COMMENT_ID - b.COMMENT_ID);
-            setComments(sorted);
-          });
-      });
+  const formatDateTime = (dateString) => {
+    const date = new Date(dateString);
+    const yyyy = date.getFullYear();
+    const mm = String(date.getMonth() + 1).padStart(2, '0'); // 0~11
+    const dd = String(date.getDate()).padStart(2, '0');
+    const hh = String(date.getHours()).padStart(2, '0');
+    const min = String(date.getMinutes()).padStart(2, '0');
+    return `${yyyy}년 ${mm}월 ${dd}일 ${hh}시 ${min}분`;
   };
 
   return (
-    <Container maxWidth="md" sx={{ backgroundColor: 'rgba(0,0,0,0.6)', color: '#f0f0f0', minHeight: '100vh', py: 4 ,backdropFilter: 'blur(4px)'}}>
+    <Container maxWidth="md" sx={{ backgroundColor: 'rgba(0,0,0,0.6)', color: '#f0f0f0', minHeight: '100vh', py: 4, backdropFilter: 'blur(4px)' }}>
       <AppBar position="static" sx={{ bgcolor: '#1b1b1b' }}>
         <Toolbar>
           <Typography variant="h5" sx={{ fontFamily: 'Creepster, cursive', letterSpacing: 2 }}>GhostFeed</Typography>
@@ -127,6 +86,7 @@ function Feed() {
               <CardContent>
                 <Typography>{feed.POST_TITLE}</Typography>
                 <Typography>{feed.NICK_NAME}</Typography>
+                <Typography>{formatDateTime(feed.CDATE_TIME)}</Typography>
               </CardContent>
             </Card>
           </Box>

@@ -15,11 +15,14 @@ import {
 } from '@mui/material';
 import { useParams } from 'react-router-dom';
 import { jwtDecode } from 'jwt-decode';
+import { useNavigate } from 'react-router-dom';
+
 
 function FeedDetail() {
   const { id } = useParams();
   const token = localStorage.getItem("token");
   const sessionUser = jwtDecode(token);
+  const navigate = useNavigate();
 
   const [post, setPost] = useState(null);
   const [imgList, setImgList] = useState([]);
@@ -30,9 +33,13 @@ function FeedDetail() {
   const [like, setLike] = useState(false);       // ✅ true면 추천 누름
   const [likeCount, setLikeCount] = useState(0); // ✅ 추천 수
 
+  const [editModeId, setEditModeId] = useState(null); // 수정 중인 댓글 ID
+  const [editContent, setEditContent] = useState(""); // 수정 입력값
+
 
   //게시글 및 댓글 호출용
   useEffect(() => {
+    console.log("등급", sessionUser.role);
     fetch("http://localhost:3005/pro-feed/" + id)
       .then(res => res.json())
       .then(data => {
@@ -107,6 +114,92 @@ function FeedDetail() {
       });
   };
 
+  const formatDateTime = (dateString) => {
+    const date = new Date(dateString);
+    const yyyy = date.getFullYear();
+    const mm = String(date.getMonth() + 1).padStart(2, '0'); // 0~11
+    const dd = String(date.getDate()).padStart(2, '0');
+    const hh = String(date.getHours()).padStart(2, '0');
+    const min = String(date.getMinutes()).padStart(2, '0');
+    return `${yyyy}년 ${mm}월 ${dd}일 ${hh}시 ${min}분`;
+  };
+
+  const handleDeletePost = (postId) => {
+    if (!window.confirm("정말 이 게시글을 삭제하시겠습니까?")) return;
+
+    fetch("http://localhost:3005/pro-feed/" + postId, {
+      method: "DELETE",
+      headers: {
+        "Authorization": "Bearer " + localStorage.getItem("token") // ✅ 토큰 포함
+      }
+    })
+      .then(res => res.json())
+      .then(data => {
+        if (data.success) {
+          alert("삭제되었습니다.");
+          navigate("/feed");
+        } else {
+          alert("삭제에 실패했습니다.");
+        }
+      })
+      .catch(err => {
+        console.error("삭제 오류:", err);
+        alert("오류가 발생했습니다.");
+      });
+  };
+
+  const handleDeleteComment = (commentId) => {
+    if (!window.confirm("정말 이 댓글을 삭제하시겠습니까?")) return;
+
+    fetch(`http://localhost:3005/pro-feed/comment/${commentId}`, {
+      method: "DELETE",
+      headers: { "Content-Type": "application/json" }
+    })
+      .then(res => res.json())
+      .then(data => {
+        alert(data.message);
+        // 댓글 다시 조회
+        fetch("http://localhost:3005/pro-feed/" + post.POST_ID)
+          .then(res => res.json())
+          .then(data => {
+            const sorted = data.commList.sort((a, b) => a.COMMENT_ID - b.COMMENT_ID);
+            setComments(sorted);
+          });
+      })
+      .catch(err => {
+        console.error("댓글 삭제 오류:", err);
+        alert("댓글 삭제 중 오류가 발생했습니다.");
+      });
+  };
+
+  const handleUpdateComment = async (commentId) => {
+    try {
+      const response = await fetch(`http://localhost:3005/pro-feed/comment/${commentId}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ content: editContent })
+      });
+
+      const data = await response.json();
+      if (data.success) {
+        // 댓글 목록 갱신
+        setComments(prev =>
+          prev.map(c =>
+            c.COMMENT_ID === commentId ? { ...c, CONTENT: editContent } : c
+          )
+        );
+        setEditModeId(null);
+        setEditContent("");
+      } else {
+        alert("수정 실패");
+      }
+    } catch (err) {
+      console.error("댓글 수정 오류:", err);
+    }
+  };
+
   if (!post) return <Typography sx={{ color: '#fff' }}>로딩 중...</Typography>;
 
   return (
@@ -118,6 +211,8 @@ function FeedDetail() {
       <Typography variant="body1" sx={{ whiteSpace: 'pre-line', mb: 2 }}>
         {post.POST_CONTENT}
       </Typography>
+
+      <Typography>{formatDateTime(post.CDATE_TIME)}</Typography>
 
       {imgList && imgList.map((item, idx) => (
         <Box key={idx} mb={2}>
@@ -153,6 +248,23 @@ function FeedDetail() {
             추천 {likeCount}
           </Typography>
         </Box>
+
+        {(sessionUser.email === post.USER_EMAIL || sessionUser.role === 'ADMIN') && (
+          <>
+            <Button
+              variant="outlined"
+              size="small"
+              color="warning"
+              onClick={() => navigate("/edit", { state: post })} // ✅ 클릭 시 수정 페이지로 이동
+            >
+              수정
+            </Button>
+            <Button variant="outlined" size="small" color="error" onClick={() => handleDeletePost(post.POST_ID)}>
+              삭제
+            </Button>
+          </>
+        )}
+
       </Box>
 
       <Box mt={4}>
@@ -168,10 +280,65 @@ function FeedDetail() {
                         {comment.NICK_NAME.charAt(0).toUpperCase()}
                       </Avatar>
                     </ListItemAvatar>
-                    <ListItemText primary={comment.NICK_NAME} secondary={comment.CONTENT} />
-                  </ListItem>
 
+                    {/* ✅ 이 자리에 조건부 렌더링 적용 */}
+                    {editModeId === comment.COMMENT_ID ? (
+                      <Box sx={{ flex: 1 }}>
+                        <TextField
+                          fullWidth
+                          size="small"
+                          value={editContent}
+                          onChange={(e) => setEditContent(e.target.value)}
+                        />
+                        <Box mt={1}>
+                          <Button
+                            size="small"
+                            variant="contained"
+                            onClick={() => handleUpdateComment(comment.COMMENT_ID)}
+                            sx={{ mr: 1 }}
+                          >
+                            저장
+                          </Button>
+                          <Button
+                            size="small"
+                            onClick={() => {
+                              setEditModeId(null);
+                              setEditContent("");
+                            }}
+                          >
+                            취소
+                          </Button>
+                        </Box>
+                      </Box>
+                    ) : (
+                      <ListItemText primary={comment.NICK_NAME} secondary={comment.CONTENT} />
+                    )}
+                  </ListItem>
+                  <Typography>{formatDateTime(comment.CDATE_TIME)}</Typography>
                   <Box textAlign="right" px={1}>
+
+                    {(sessionUser.email === comment.USER_EMAIL || sessionUser.role === 'ADMIN') && (
+                      <>
+                        <Button
+                          size="small"
+                          onClick={() => {
+                            setEditModeId(comment.COMMENT_ID);
+                            setEditContent(comment.CONTENT); // 기존 내용 채워 넣기
+
+                          }}
+                          sx={{ fontSize: 12, color: '#888' }}
+                        >
+                          수정
+                        </Button>
+                        <Button
+                          size="small"
+                          onClick={() => handleDeleteComment(comment.COMMENT_ID)}
+                          sx={{ fontSize: 12, color: '#888' }}
+                        >
+                          삭제
+                        </Button>
+                      </>
+                    )}
                     <Button
                       size="small"
                       onClick={() => setReplyTarget(replyTarget === comment.COMMENT_ID ? null : comment.COMMENT_ID)}
@@ -191,8 +358,33 @@ function FeedDetail() {
                           </Avatar>
                         </ListItemAvatar>
                         <ListItemText primary={`↪️ ${reply.NICK_NAME}`} secondary={reply.CONTENT} />
+                        {(sessionUser.email === reply.USER_EMAIL || sessionUser.role === 'ADMIN') && (
+                          <>
+                            <Button
+                              size="small"
+                              onClick={() => {
+                                setEditModeId(comment.COMMENT_ID);
+                                setEditContent(comment.CONTENT); // 기존 내용 채워 넣기
+                              }}
+                              sx={{ fontSize: 12, color: '#888' }}
+                            >
+                              수정
+                            </Button>
+                            <Button
+                              size="small"
+                              onClick={() => handleDeleteComment(reply.COMMENT_ID)}
+                              sx={{ fontSize: 12, color: '#888' }}
+                            >
+                              삭제
+                            </Button>
+                          </>
+                        )}
                       </ListItem>
+
+
                     ))}
+
+
 
                   {replyTarget === comment.COMMENT_ID && (
                     <Box sx={{ pl: 6, mb: 1 }}>

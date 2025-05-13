@@ -1,16 +1,30 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Box, Typography, Avatar, Stack } from '@mui/material';
-
-const fakeUsers = [
-  { id: 1, name: 'ghost_hunter', avatar: '/avatars/ghost1.png' },
-  { id: 2, name: 'nightcrawler', avatar: '/avatars/ghost2.png' },
-  { id: 3, name: 'shadowseer', avatar: '/avatars/ghost3.png' },
-  { id: 4, name: 'haunted_soul', avatar: '/avatars/ghost4.png' },
-  { id: 5, name: 'creepwatch', avatar: '/avatars/ghost5.png' },
-  { id: 6, name: 'phantomgirl', avatar: '/avatars/ghost6.png' },
-];
+import axios from 'axios';
+import { useNavigate } from 'react-router-dom'; // ✅ navigate 사용
 
 function Header() {
+  const [suggestedUsers, setSuggestedUsers] = useState([]);
+  const navigate = useNavigate(); // ✅ useNavigate 훅
+
+  useEffect(() => {
+    const fetchSuggestedUsers = async () => {
+      try {
+        const response = await axios.get('http://localhost:3005/pro-user/suggested-users', {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem('token')}`
+          }
+        });
+        console.log("추천 유저 응답", response.data);
+        setSuggestedUsers(response.data);
+      } catch (err) {
+        console.error('추천 유저 가져오기 실패:', err);
+      }
+    };
+
+    fetchSuggestedUsers();
+  }, []);
+
   return (
     <Box
       sx={{
@@ -18,7 +32,7 @@ function Header() {
         marginLeft: '15%',
         px: 2,
         py: 1,
-        backgroundColor: 'rgba(0, 0, 0, 0.5)', // ✅ 반투명 배경
+        backgroundColor: 'rgba(0, 0, 0, 0.5)',
         color: '#fff',
         borderBottom: '1px solid #333',
         position: 'sticky',
@@ -31,27 +45,37 @@ function Header() {
       </Typography>
       <Box sx={{ overflowX: 'auto', whiteSpace: 'nowrap' }}>
         <Stack direction="row" spacing={2}>
-          {fakeUsers.map((user) => (
+          {suggestedUsers.map((user, index) => (
             <Box
-              key={user.id}
+              key={index}
               sx={{
                 display: 'inline-block',
                 textAlign: 'center',
                 color: '#ccc',
+                cursor: 'pointer'
               }}
+              onClick={() => navigate(`/mypage/${encodeURIComponent(user.USER_EMAIL)}`)} // ✅ 클릭 시 이동
             >
               <Avatar
-                src={user.avatar}
-                alt={user.name}
+                src={
+                  user.PROFILE_IMG
+                    ? `http://localhost:3005/${user.PROFILE_IMG}`
+                    : '/default-avatar.png'
+                }
+                alt={user.NICK_NAME}
                 sx={{
                   width: 56,
                   height: 56,
                   margin: '0 auto',
                   border: '2px solid #ff1744',
+                  cursor: 'pointer'
                 }}
               />
-              <Typography variant="body2" sx={{ mt: 1, fontSize: 12 }}>
-                {user.name}
+              <Typography
+                variant="body2"
+                sx={{ mt: 1, fontSize: 12 }}
+              >
+                {user.NICK_NAME}
               </Typography>
             </Box>
           ))}
