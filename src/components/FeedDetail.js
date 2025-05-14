@@ -276,9 +276,7 @@ function FeedDetail() {
                 <>
                   <ListItem alignItems="flex-start">
                     <ListItemAvatar>
-                      <Avatar src={comment.PROFILE_IMG ? "http://localhost:3005/" + comment.PROFILE_IMG : ""}>
-                        {comment.NICK_NAME.charAt(0).toUpperCase()}
-                      </Avatar>
+                      <Avatar src={comment.PROFILE_IMG ? "http://localhost:3005/" + comment.PROFILE_IMG : ""}/>
                     </ListItemAvatar>
 
                     {/* ✅ 이 자리에 조건부 렌더링 적용 */}
@@ -353,9 +351,7 @@ function FeedDetail() {
                     .map(reply => (
                       <ListItem key={reply.COMMENT_ID} sx={{ pl: 6, backgroundColor: '#1a1a1a' }}>
                         <ListItemAvatar>
-                          <Avatar src={reply.PROFILE_IMG ? "http://localhost:3005/" + reply.PROFILE_IMG : ""}>
-                            {reply.NICK_NAME.charAt(0).toUpperCase()}
-                          </Avatar>
+                          <Avatar src={reply.PROFILE_IMG ? "http://localhost:3005/" + reply.PROFILE_IMG : ""}/>
                         </ListItemAvatar>
                         <ListItemText primary={`↪️ ${reply.NICK_NAME}`} secondary={reply.CONTENT} />
                         {(sessionUser.email === reply.USER_EMAIL || sessionUser.role === 'ADMIN') && (

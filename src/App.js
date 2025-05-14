@@ -11,10 +11,13 @@ import Feed from './components/Feed';
 import Register from './components/Register';
 import MyPage from './components/MyPage';
 import Menu from './components/Menu';
-import Header from './components/Header'; // ✅ 헤더 추가
+import Header from './components/Header';
 import FeedDetail from './components/FeedDetail';
-
-
+import FollowerList from './components/FollowerList';
+import MyFollowingList from './components/MyFollowingList';
+import MyFollowersList from './components/MyFollowersList';
+import NotificationList from './components/NotificationList';
+import NotificationPopup from './components/NotificationPopup'; // ✅ 알림 팝업 컴포넌트
 
 const darkTheme = createTheme({
   palette: {
@@ -80,37 +83,20 @@ function App() {
       }} />
 
       {/* 🔊 배경 음악 */}
-      {/* <audio
-        ref={audioRef}
-        src="/audio/bg.mp3"
-        loop
-        autoPlay
-        muted
-        hidden
-      /> */}
+      {/* <audio ref={audioRef} src="/audio/bg.mp3" loop autoPlay muted hidden /> */}
+      {/* <IconButton ...>{isPlaying ? <MusicNoteIcon /> : <MusicOffIcon />}</IconButton> */}
 
-      {/* 🔊 음악 토글 버튼 */}
-      {/* <IconButton
-        onClick={() => setIsPlaying(!isPlaying)}
-        sx={{
-          position: 'fixed',
-          top: 10,
-          left: 10,
-          color: '#fff',
-          zIndex: 9999,
-          backgroundColor: 'rgba(0,0,0,0.5)',
-          '&:hover': { backgroundColor: 'rgba(255,255,255,0.1)' }
-        }}
-      >
-        {isPlaying ? <MusicNoteIcon /> : <MusicOffIcon />}
-      </IconButton> */}
+      <Box sx={{ display: 'flex', minHeight: '100vh' }}>
+        {/* 👉 좌측 메뉴 */}
+        {!isAuthPage && (
+          <Box sx={{ width: '240px', flexShrink: 0 }}>
+            <Menu />
+          </Box>
+        )}
 
-      {/* 전체 레이아웃 */}
-      <Box sx={{ display: 'flex', flexDirection: 'column' }}>
-        {!isAuthPage && <Header />}
-         {/* ✅ 헤더 표시 조건 */}
-        <Box sx={{ display: 'flex' }}>
-          {!isAuthPage && <Menu />}
+        {/* 👉 우측 콘텐츠 (Header + Main) */}
+        <Box sx={{ flexGrow: 1, display: 'flex', flexDirection: 'column' }}>
+          {!isAuthPage && <Header />}
           <Box component="main" sx={{ flexGrow: 1, p: 3 }}>
             <Routes>
               <Route path="/" element={<ProLogin />} />
@@ -122,11 +108,18 @@ function App() {
               <Route path="/post/:id" element={<FeedDetail />} />
               <Route path="/edit" element={<Register editMode={true} postData={location.state} />} />
               <Route path="/mypage/:email" element={<MyPage />} />
-              {/* 👉 추후 프로필 등 경로 추가 가능 */}
+              <Route path="/followerlist" element={<FollowerList />} />
+              <Route path="/myfollowinglist" element={<MyFollowingList />} />
+              <Route path="/myfollowinglist/:email" element={<MyFollowingList />} />
+              <Route path="/myfollowerslist" element={<MyFollowersList />} />
+              <Route path="/myfollowerslist/:email" element={<MyFollowersList />} />
+              <Route path="/notificationlist" element={<NotificationList />} />
+              
             </Routes>
           </Box>
         </Box>
       </Box>
+      <NotificationPopup />
     </ThemeProvider>
   );
 }

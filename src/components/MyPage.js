@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Container, Box, Typography, Avatar, Paper, Grid, Dialog, DialogTitle, DialogContent, Button, DialogActions } from '@mui/material';
 import { jwtDecode } from 'jwt-decode';
@@ -20,11 +20,15 @@ function MyPage() {
   const [postCount, setPostCount] = useState(0);
   const [myPosts, setMyPosts] = useState([]);
 
+  const [isFollowing, setIsFollowing] = useState(false); // 팔로우 여부
+  const [cancelDialogOpen, setCancelDialogOpen] = useState(false); // 다이얼로그 열기
+  const postRef = useRef(null); // 나의 기록 위치
+
   const fnUserInfo = () => {
     fetch("http://localhost:3005/pro-user/" + email)
       .then(res => res.json())
       .then(data => {
-         console.log("유저 정보 응답 확인:", data); // ✅ 여기 추가
+        console.log("유저 정보 응답 확인:", data); // ✅ 여기 추가
         setInfo(data.info);
         setIsMe(sessionUser?.email === email); // ✅ 로그인한 사용자와 일치 여부 확인
       });
@@ -94,6 +98,39 @@ function MyPage() {
       });
   };
 
+  const handleFollow = () => {
+    fetch("http://localhost:3005/pro-follow", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: "Bearer " + token
+      },
+      body: JSON.stringify({
+        follower: sessionUser.email, // 로그인한 유저 (팔로우 요청하는 쪽)
+        following: email            // 현재 보고 있는 유저 (팔로우 당하는 쪽)
+      })
+    })
+      .then(res => res.json())
+      .then(data => {
+        if (data.success) {
+          alert("동행자 요청을 보냈습니다.");
+          setIsFollowing(true);
+          MyPageStat(); // 팔로잉 수 업데이트
+        } else {
+          alert("요청 실패: " + data.message);
+        }
+      });
+  };
+
+  const checkFollowStatus = () => {
+    fetch(`http://localhost:3005/pro-follow/status?follower=${sessionUser.email}&following=${email}`)
+      .then(res => res.json())
+      .then(data => {
+        setIsFollowing(data.isFollowing); // true / false 리턴
+        console.log("팔로윙 체크", data.isFollowing);
+      });
+  };
+
   const formatDateTime = (dateString) => {
     const date = new Date(dateString);
     const yyyy = date.getFullYear();
@@ -104,6 +141,31 @@ function MyPage() {
     return `${yyyy}년 ${mm}월 ${dd}일 ${hh}시 ${min}분`;
   };
 
+  const handleUnfollow = () => {
+    fetch("http://localhost:3005/pro-follow", {
+      method: "DELETE",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: "Bearer " + token
+      },
+      body: JSON.stringify({
+        follower: sessionUser.email,
+        following: email
+      })
+    })
+      .then(res => res.json())
+      .then(data => {
+        if (data.success) {
+          alert("동행을 포기했습니다...");
+          setIsFollowing(false);
+          setCancelDialogOpen(false);
+          MyPageStat();
+        } else {
+          alert("실패: " + data.message);
+        }
+      });
+  };
+
   useEffect(() => {
     if (!token) {
       alert("이야기를 보고싶다면 가입하세요.");
@@ -112,7 +174,9 @@ function MyPage() {
       fnUserInfo();
       MyPageStat();
       fetchMyPosts();
-      
+      if (sessionUser?.email !== email) {
+        checkFollowStatus();
+      }
     }
   }, [email]);
 
@@ -129,18 +193,61 @@ function MyPage() {
             />
             <Typography variant="h4" sx={{ fontFamily: 'Creepster, cursive', color: '#fff' }}>{info?.NICK_NAME}</Typography>
             <Typography variant="body2" sx={{ color: '#ccc' }}>{info?.USER_EMAIL}</Typography>
+            {!isMe && (
+              isFollowing ? (
+                <>
+                  <Button
+                    variant="outlined"
+                    color="inherit"
+                    onClick={() => setCancelDialogOpen(true)}
+                    sx={{ mt: 2 }}
+                  >
+                    💔 동행 중
+                  </Button>
+
+                  <Dialog open={cancelDialogOpen} onClose={() => setCancelDialogOpen(false)}>
+                    <DialogTitle>동행을 포기하겠습니까?</DialogTitle>
+                    <DialogActions>
+                      <Button onClick={() => setCancelDialogOpen(false)}>아니오</Button>
+                      <Button onClick={handleUnfollow} color="error">예</Button>
+                    </DialogActions>
+                  </Dialog>
+                </>
+              ) : (
+                <Button
+                  variant="contained"
+                  color="error"
+                  onClick={handleFollow}
+                  sx={{ mt: 2 }}
+                >
+                  🎃 동행자 요청
+                </Button>
+              )
+            )}
           </Box>
 
           <Grid container spacing={2}>
-            <Grid item xs={4} textAlign="center">
+            <Grid
+              item xs={4}
+              onClick={() => navigate(`/myfollowerslist/${encodeURIComponent(info?.USER_EMAIL)}`)}
+              sx={{ textAlign: "center", cursor: "pointer" }}
+            >
               <Typography variant="h6">👁️ 추종자</Typography>
               <Typography variant="body1">{followerCount}</Typography>
             </Grid>
-            <Grid item xs={4} textAlign="center">
+            <Grid
+              item xs={4}
+              onClick={() => navigate(`/myfollowinglist/${encodeURIComponent(info?.USER_EMAIL)}`)}
+              sx={{ textAlign: "center", cursor: "pointer" }}  // ✅ 여기에 cursor 포함
+            >
               <Typography variant="h6">🕯️ 동행자</Typography>
               <Typography variant="body1">{followingCount}</Typography>
             </Grid>
-            <Grid item xs={4} textAlign="center">
+            <Grid
+              item xs={4}
+              onClick={() => postRef.current?.scrollIntoView({ behavior: 'smooth' })}
+              sx={{ textAlign: "center", cursor: "pointer" }}
+            >
               <Typography variant="h6">📜 기록</Typography>
               <Typography variant="body1">{postCount}</Typography>
             </Grid>
@@ -174,7 +281,13 @@ function MyPage() {
         </Dialog>
 
         <Box sx={{ width: '100%' }}>
-          <Typography variant="h6" sx={{ color: '#ff1744' }}>🧾 나의 기록</Typography>
+          <Typography
+            variant="h6"
+            sx={{ color: '#ff1744' }}
+            ref={postRef} // 📌 여기에 ref 연결
+          >
+            🧾 {info?.NICK_NAME}의 기록
+          </Typography>
           {myPosts.length === 0 ? (
             <Typography>작성한 게시글이 없습니다.</Typography>
           ) : (

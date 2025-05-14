@@ -10,7 +10,7 @@ function Header() {
   useEffect(() => {
     const fetchSuggestedUsers = async () => {
       try {
-        const response = await axios.get('http://localhost:3005/pro-user/suggested-users', {
+        const response = await axios.get('http://localhost:3005/pro-user/suggested-users?limit=6', {
           headers: {
             Authorization: `Bearer ${localStorage.getItem('token')}`
           }
@@ -44,42 +44,55 @@ function Header() {
         팔로우 추천 👁
       </Typography>
       <Box sx={{ overflowX: 'auto', whiteSpace: 'nowrap' }}>
-        <Stack direction="row" spacing={2}>
-          {suggestedUsers.map((user, index) => (
-            <Box
-              key={index}
-              sx={{
-                display: 'inline-block',
-                textAlign: 'center',
-                color: '#ccc',
-                cursor: 'pointer'
-              }}
-              onClick={() => navigate(`/mypage/${encodeURIComponent(user.USER_EMAIL)}`)} // ✅ 클릭 시 이동
-            >
-              <Avatar
-                src={
-                  user.PROFILE_IMG
-                    ? `http://localhost:3005/${user.PROFILE_IMG}`
-                    : '/default-avatar.png'
-                }
-                alt={user.NICK_NAME}
+        {suggestedUsers.length === 0 ? (
+          <Box
+            sx={{
+              height: 80, // ✅ 추천 아바타 높이에 맞춤
+              alignItems: 'center',
+              justifyContent: 'center',
+              color: '#aaa',
+            }}
+          >
+            동행자 찾는 중...
+          </Box>
+        ) : (
+          <Stack direction="row" spacing={2}>
+            {suggestedUsers.map((user, index) => (
+              <Box
+                key={index}
                 sx={{
-                  width: 56,
-                  height: 56,
-                  margin: '0 auto',
-                  border: '2px solid #ff1744',
+                  display: 'inline-block',
+                  textAlign: 'center',
+                  color: '#ccc',
                   cursor: 'pointer'
                 }}
-              />
-              <Typography
-                variant="body2"
-                sx={{ mt: 1, fontSize: 12 }}
+                onClick={() => navigate(`/mypage/${encodeURIComponent(user.USER_EMAIL)}`)}
               >
-                {user.NICK_NAME}
-              </Typography>
-            </Box>
-          ))}
-        </Stack>
+                <Avatar
+                  src={
+                    user.PROFILE_IMG
+                      ? `http://localhost:3005/${user.PROFILE_IMG}`
+                      : ''
+                  }
+                  alt={user.NICK_NAME}
+                  sx={{
+                    width: 56,
+                    height: 56,
+                    margin: '0 auto',
+                    border: '2px solid #ff1744',
+                    cursor: 'pointer'
+                  }}
+                />
+                <Typography
+                  variant="body2"
+                  sx={{ mt: 1, fontSize: 12 }}
+                >
+                  {user.NICK_NAME}
+                </Typography>
+              </Box>
+            ))}
+          </Stack>
+        )}
       </Box>
     </Box>
   );
