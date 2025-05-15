@@ -1,31 +1,22 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect } from 'react';
 import {
   Drawer, List, ListItem, ListItemText, Typography, Toolbar, ListItemIcon, Badge
 } from '@mui/material';
 import {
   Home, Add, AccountCircle, Visibility, LocationOn,
-  MailOutline, Image, ReportGmailerrorred
+  Image, ReportGmailerrorred, MailOutline
 } from '@mui/icons-material';
 import { Link } from 'react-router-dom';
 import { jwtDecode } from 'jwt-decode';
+import { useRecoilValue } from 'recoil'; // ✅ 이거 추가!
+import { unreadCountState } from './unreadCountAtom'; // ✅ 경로 조정
 
 function Menu() {
   const token = localStorage.getItem('token');
   const sessionUser = token ? jwtDecode(token) : null;
   const myEmail = sessionUser?.email;
 
-  const [notiCount, setNotiCount] = useState(0);
-
-  // ✅ 알림 개수 불러오기 (mount 시 1회만, 또는 주기적으로도 가능)
-  useEffect(() => {
-    const fetchNotifications = async () => {
-      if (!myEmail) return;
-      const res = await fetch(`/api/notification?user=${myEmail}`);
-      const data = await res.json();
-      setNotiCount(data.filter(n => n.IS_READ === 'N').length); // 안읽은 것만 카운트
-    };
-    fetchNotifications();
-  }, [myEmail]);
+  const unreadCount = useRecoilValue(unreadCountState); // ✅ 전역 상태 읽기만
 
   const menuItems = [
     { text: '메인', icon: <Home />, path: '/feed' },
@@ -37,12 +28,13 @@ function Menu() {
     {
       text: '속삭임 보관함',
       icon: (
-        <Badge badgeContent={notiCount} color="error">
+        <Badge badgeContent={unreadCount} color="error">
           <MailOutline />
         </Badge>
       ),
       path: '/notificationlist'
     },
+    { text: '다이렉트 메시지', icon: <Visibility />, path: '/dmpage' },
     { text: '목격담 모음', icon: <Visibility />, path: '/sightings' },
     { text: '폐가 탐험기', icon: <LocationOn />, path: '/abandoned' },
     { text: '저주받은 갤러리', icon: <Image />, path: '/cursed-gallery' },

@@ -5,8 +5,10 @@ import {
 } from "@mui/material";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import '@fontsource/cinzel'; // 고딕 느낌 폰트 추가
-import '@fontsource/noto-sans-kr'; // 한글 기본 폰트
+import { jwtDecode } from "jwt-decode";
+import '@fontsource/cinzel'; // 고딕 느낌 폰트
+import '@fontsource/noto-sans-kr'; // 한글 폰트
+import socket from '../socket'; // ✅ socket 객체 불러오기
 
 export default function ProLogin() {
   const [email, setEmail] = useState("");
@@ -16,6 +18,7 @@ export default function ProLogin() {
   const [dialogMessage, setDialogMessage] = useState('');
   const [shouldNavigate, setShouldNavigate] = useState(false);
 
+  // ✅ 로그인 처리 함수
   const handleLogin = (e) => {
     e.preventDefault();
     if (email && password) {
@@ -28,10 +31,19 @@ export default function ProLogin() {
         .then(data => {
           setDialogMessage(data.message);
           setDialogOpen(true);
+
           if (data.success) {
+            // ✅ 1. 토큰 저장
             localStorage.setItem("token", data.token);
-            console.log(data.token);
             setShouldNavigate(true);
+
+            // ✅ 2. 토큰 디코딩 → 이메일 추출
+            const decoded = jwtDecode(data.token);
+            const myEmail = decoded.email;
+
+            // ✅ 3. 소켓 연결 + register
+            socket.connect();                   // 소켓 연결 시작
+            socket.emit('register', myEmail);   // 서버에 내 이메일 등록
           }
         });
     } else {
@@ -40,34 +52,36 @@ export default function ProLogin() {
     }
   };
 
+  // ✅ 알림창 닫고 이동
   const handleDialogClose = () => {
     setDialogOpen(false);
     if (shouldNavigate) {
-      navigate("/feed");
+      navigate("/feed"); // ✅ 로그인 성공 후 피드로 이동
     }
   };
 
   return (
-    <Container maxWidth="xs" 
-    sx={{ mt: 18}}>
+    <Container maxWidth="xs" sx={{ mt: 18 }}>
       <Paper elevation={0} sx={{
         p: 4,
-        color: "#ccc", // 텍스트 흐리게
-        border: "1px solid #222", // 카드 경계만 흐릿하게
+        color: "#ccc",
+        border: "1px solid #222",
         padding: '20px',
-        backgroundColor: 'rgba(0,0,0,0.6)', // 카드 배경도 검정
+        backgroundColor: 'rgba(0,0,0,0.6)',
         borderRadius: 3,
         boxShadow: '0 0 10px rgba(255, 0, 0, 0.3)',
         backdropFilter: 'blur(5px)'
       }}>
         <Box sx={{ textAlign: "center", mb: 2 }}>
           <Typography variant="h4" sx={{ fontFamily: 'Cinzel', color: "#e53935" }}>
-          이 얘기, 해도 될까?
+            이 얘기, 해도 될까?
           </Typography>
           <Typography sx={{ fontSize: "0.9rem", color: "#888" }}>
             남들에게 하지 못한 이야기... 당신에게도 뭔가가 있나요?
           </Typography>
         </Box>
+
+        {/* 로그인 폼 */}
         <Box component="form" noValidate autoComplete="off" onSubmit={handleLogin}>
           <TextField
             fullWidth margin="normal"
@@ -96,6 +110,7 @@ export default function ProLogin() {
         </Box>
       </Paper>
 
+      {/* 로그인 결과 알림창 */}
       <Dialog open={dialogOpen} onClose={handleDialogClose} fullWidth maxWidth="sm">
         <DialogTitle>알림</DialogTitle>
         <DialogContent>

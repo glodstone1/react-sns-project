@@ -3,29 +3,66 @@ import {
   List, ListItem, ListItemAvatar, ListItemText,
   Avatar, Box, Typography, Paper
 } from '@mui/material';
-import NotificationsActiveIcon from '@mui/icons-material/NotificationsActive';
+
+import { jwtDecode } from 'jwt-decode';
+import dayjs from 'dayjs';
+import relativeTime from 'dayjs/plugin/relativeTime';
+
+import CommentIcon from '@mui/icons-material/Comment';
+import FavoriteBorderIcon from '@mui/icons-material/FavoriteBorder';
+import VisibilityIcon from '@mui/icons-material/Visibility';
+
+import { useNavigate } from 'react-router-dom';
+dayjs.extend(relativeTime);
 
 function NotificationList() {
-  const [notifications, setNotifications] = useState([
-    {
-      id: 1,
-      type: 'follow',
-      sender: 'testone7@example.com',
-      nickname: 'TestOne7',
-      profileImg: '', // 경로 비워두면 기본
-      message: '님이 당신을 동행 요청했습니다.',
-      time: '5분 전'
-    },
-    {
-      id: 2,
-      type: 'comment',
-      sender: 'ghost99@example.com',
-      nickname: 'Ghost99',
-      profileImg: '',
-      message: '님이 당신의 기록에 댓글을 남겼습니다.',
-      time: '1시간 전'
+  const [notifications, setNotifications] = useState([]);
+  const token = localStorage.getItem('token');
+  const userEmail = token ? jwtDecode(token).email : null;
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    const fetchNotifications = async () => {
+      const res = await fetch(`http://localhost:3005/pro-notification/all?user=${userEmail}`);
+      const data = await res.json();
+
+      const formatted = data.map(n => ({
+        id: n.NOTI_ID,
+        type: n.NOTI_TYPE,
+        message: n.MESSAGE,
+        targetId: n.TARGET_ID,
+        senderEmail: n.SENDER_EMAIL,
+        nickname: n.NICK_NAME,
+        profileImg: n.PROFILE_IMG,
+        time: dayjs(n.CDATE_TIME).fromNow()
+      }));
+
+      setNotifications(formatted);
+    };
+    fetchNotifications();
+  }, [userEmail]);
+
+  const getIconByType = (type) => {
+    switch (type) {
+      case 'COMMENT':
+        return <CommentIcon sx={{ color: '#444' }} />;
+      case 'LIKE':
+        return <FavoriteBorderIcon sx={{ color: '#ff1744' }} />;
+      case 'FOLLOW':
+        return <VisibilityIcon sx={{ color: '#00e676' }} />;
+      default:
+        return null;
     }
-  ]);
+  };
+
+  const getColorByType = (type) => {
+    switch (type) {
+      case 'COMMENT': return '#ff1744';
+      case 'LIKE': return '#2979ff';
+      case 'FOLLOW': return '#00e676';
+      default: return '#ccc';
+    }
+  };
 
   return (
     <Paper
@@ -52,6 +89,19 @@ function NotificationList() {
           {notifications.map((noti) => (
             <ListItem
               key={noti.id}
+              onClick={() => {
+                // ✅ 알림 읽음 처리
+                fetch(`http://localhost:3005/pro-notification/notification/${noti.id}/read`, {
+                  method: 'PATCH'
+                });
+
+                // ✅ 클릭 타입에 따라 이동 경로 분기
+                if (noti.type === 'FOLLOW') {
+                  navigate(`/mypage/${noti.senderEmail}`);
+                } else if (noti.type === 'COMMENT' || noti.type === 'LIKE') {
+                  navigate(`/post/${noti.targetId}`);
+                }
+              }}
               sx={{
                 borderBottom: '1px solid #333',
                 py: 2,
@@ -63,14 +113,44 @@ function NotificationList() {
               }}
             >
               <ListItemAvatar>
-                <Avatar src={noti.profileImg || '/default-avatar.png'}>
-                  <NotificationsActiveIcon />
+                <Avatar
+                  sx={{
+                    bgcolor: 'rgba(0,0,0,0.6)',
+                    border: `2px solid ${getColorByType(noti.type)}`
+                  }}
+                  onClick={(e) => {
+                    e.stopPropagation(); // ✅ 클릭 이벤트 버블링 방지
+                    navigate(`/mypage/${noti.senderEmail}`);
+                  }}
+                >
+                  {getIconByType(noti.type)}
+                </Avatar>
+              </ListItemAvatar>
+              <ListItemAvatar>
+                <Avatar
+                  src={noti.profileImg ? `http://localhost:3005/${noti.profileImg}` : '/default-avatar.png'}
+                  sx={{
+                    bgcolor: 'rgba(110, 102, 102, 0.6)',
+                  }}
+                  onClick={(e) => {
+                    e.stopPropagation(); // ✅ 클릭 이벤트 버블링 방지
+                    navigate(`/mypage/${noti.senderEmail}`);
+                  }}
+                >
                 </Avatar>
               </ListItemAvatar>
               <ListItemText
                 primary={
                   <Typography>
-                    <strong style={{ color: '#ff1744' }}>{noti.nickname}</strong>
+                    <strong
+                      onClick={(e) => {
+                        e.stopPropagation(); // ✅ 클릭 이벤트 버블링 방지
+                        navigate(`/mypage/${noti.senderEmail}`);
+                      }}
+                      style={{ color: getColorByType(noti.type), cursor: 'pointer' }}
+                    >
+                      {noti.nickname}
+                    </strong>{" "}
                     {noti.message}
                   </Typography>
                 }

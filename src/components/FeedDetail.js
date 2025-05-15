@@ -99,9 +99,11 @@ function FeedDetail() {
       body: JSON.stringify({
         email: sessionUser.email,
         content_type: "POST",
-        target_id: post.POST_ID
+        target_id: post.POST_ID,
+        owner_email: post.USER_EMAIL // ✅ 게시글 작성자
       })
     })
+
       .then(res => res.json())
       .then(data => {
         if (data.result === "liked") {
@@ -276,7 +278,7 @@ function FeedDetail() {
                 <>
                   <ListItem alignItems="flex-start">
                     <ListItemAvatar>
-                      <Avatar src={comment.PROFILE_IMG ? "http://localhost:3005/" + comment.PROFILE_IMG : ""}/>
+                      <Avatar src={comment.PROFILE_IMG ? "http://localhost:3005/" + comment.PROFILE_IMG : ""} />
                     </ListItemAvatar>
 
                     {/* ✅ 이 자리에 조건부 렌더링 적용 */}
@@ -351,7 +353,7 @@ function FeedDetail() {
                     .map(reply => (
                       <ListItem key={reply.COMMENT_ID} sx={{ pl: 6, backgroundColor: '#1a1a1a' }}>
                         <ListItemAvatar>
-                          <Avatar src={reply.PROFILE_IMG ? "http://localhost:3005/" + reply.PROFILE_IMG : ""}/>
+                          <Avatar src={reply.PROFILE_IMG ? "http://localhost:3005/" + reply.PROFILE_IMG : ""} />
                         </ListItemAvatar>
                         <ListItemText primary={`↪️ ${reply.NICK_NAME}`} secondary={reply.CONTENT} />
                         {(sessionUser.email === reply.USER_EMAIL || sessionUser.role === 'ADMIN') && (
