@@ -1,11 +1,11 @@
 import React, { useEffect, useState } from 'react';
 import { Box, Typography, Avatar, Stack } from '@mui/material';
 import axios from 'axios';
-import { useNavigate } from 'react-router-dom'; // ✅ navigate 사용
+import { useNavigate } from 'react-router-dom';
 
 function Header() {
   const [suggestedUsers, setSuggestedUsers] = useState([]);
-  const navigate = useNavigate(); // ✅ useNavigate 훅
+  const navigate = useNavigate();
 
   useEffect(() => {
     const fetchSuggestedUsers = async () => {
@@ -31,7 +31,7 @@ function Header() {
         width: '100%',
         marginLeft: '15%',
         px: 2,
-        py: 1,
+        py: 1.5,
         backgroundColor: 'rgba(0, 0, 0, 0.5)',
         color: '#fff',
         borderBottom: '1px solid #333',
@@ -40,20 +40,44 @@ function Header() {
         zIndex: 1000,
       }}
     >
-      <Typography variant="h6" sx={{ mb: 1, fontFamily: 'Creepster, cursive' }}>
-        팔로우 추천 👁
+      <Typography
+        variant="h6"
+        sx={{
+          mb: 1,
+          fontFamily: 'Creepster, cursive',
+          color: '#ff1744',
+          letterSpacing: 3,
+          textShadow: '1px 1px 4px rgba(0,0,0,0.8)',
+          animation: 'flicker 2.5s infinite alternate',
+        }}
+      >
+        SUGGESTED COMPANIONS
       </Typography>
+
+      <style>
+        {`
+    @keyframes flicker {
+      0% { opacity: 1; }
+      50% { opacity: 0.85; }
+      80% { opacity: 0.6; transform: scale(1.01); }
+      100% { opacity: 1; }
+    }
+  `}
+      </style>
+
       <Box sx={{ overflowX: 'auto', whiteSpace: 'nowrap' }}>
         {suggestedUsers.length === 0 ? (
           <Box
             sx={{
-              height: 80, // ✅ 추천 아바타 높이에 맞춤
+              height: 80,
+              display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              color: '#aaa',
+              color: '#888',
+              fontStyle: 'italic',
             }}
           >
-            동행자 찾는 중...
+            SEARCHING COMPANIONS...
           </Box>
         ) : (
           <Stack direction="row" spacing={2}>
@@ -64,7 +88,12 @@ function Header() {
                   display: 'inline-block',
                   textAlign: 'center',
                   color: '#ccc',
-                  cursor: 'pointer'
+                  cursor: 'pointer',
+                  transition: 'transform 0.2s ease-in-out',
+                  '&:hover': {
+                    transform: 'scale(1.05)',
+                    color: '#ff1744',
+                  },
                 }}
                 onClick={() => navigate(`/mypage/${encodeURIComponent(user.USER_EMAIL)}`)}
               >
@@ -80,12 +109,15 @@ function Header() {
                     height: 56,
                     margin: '0 auto',
                     border: '2px solid #ff1744',
-                    cursor: 'pointer'
                   }}
                 />
                 <Typography
                   variant="body2"
-                  sx={{ mt: 1, fontSize: 12 }}
+                  sx={{
+                    mt: 1,
+                    fontSize: 12,
+                    fontWeight: 'bold',
+                  }}
                 >
                   {user.NICK_NAME}
                 </Typography>
@@ -95,6 +127,7 @@ function Header() {
         )}
       </Box>
     </Box>
+
   );
 }
 

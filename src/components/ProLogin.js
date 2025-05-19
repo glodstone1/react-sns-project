@@ -77,7 +77,7 @@ export default function ProLogin() {
             이 얘기, 해도 될까?
           </Typography>
           <Typography sx={{ fontSize: "0.9rem", color: "#888" }}>
-            남들에게 하지 못한 이야기... 당신에게도 뭔가가 있나요?
+            남들에게 하지 못한 이야기... 당신에게도 있나요?
           </Typography>
         </Box>
 
@@ -105,7 +105,7 @@ export default function ProLogin() {
             입장하기
           </Button>
           <Typography variant="body2" sx={{ mt: 2, textAlign: "center", fontSize: "0.8rem", color: "#777" }}>
-            아직 어둠의 세계에 발을 들이지 않으셨나요? <Link href="/join" sx={{ color: "#e53935" }}>가입하러 가기</Link>
+            아직 회원이 아니신가요? <Link href="/join" sx={{ color: "#e53935" }}>가입하러 가기</Link>
           </Typography>
         </Box>
       </Paper>

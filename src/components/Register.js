@@ -144,9 +144,15 @@ function Register() {
         <Typography
           variant="h4"
           gutterBottom
-          sx={{ fontFamily: 'Creepster, cursive', color: '#ff1744' }}
+          sx={{
+            fontFamily: 'Creepster, cursive',
+            letterSpacing: 4,
+            color: '#ff1744',
+            textShadow: '2px 2px 4px rgba(0,0,0,0.8)',
+            animation: 'flicker 2.5s infinite alternate'
+          }}
         >
-          {editMode ? "👻 수정하기" : "👻 등록하기"}
+          {editMode ? "EDIT POST" : "WRITE STORY"}
         </Typography>
 
         <FormControl fullWidth margin="normal">
@@ -256,6 +262,16 @@ function Register() {
           {editMode ? "수정하기" : "등록하기"}
         </Button>
       </Box>
+      <style>
+        {`
+    @keyframes flicker {
+      0%   { opacity: 1; }
+      50%  { opacity: 0.85; }
+      80%  { opacity: 0.6; transform: scale(1.01); }
+      100% { opacity: 1; }
+    }
+  `}
+      </style>
     </Container>
   );
 }

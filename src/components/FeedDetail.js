@@ -206,15 +206,45 @@ function FeedDetail() {
 
   return (
     <Container maxWidth="md" sx={{ py: 4, color: '#fff', backgroundColor: '#111', minHeight: '100vh', backdropFilter: 'blur(4px)' }}>
-      <Typography variant="h4" sx={{ fontWeight: 'bold', color: '#ff1744', mb: 2 }}>
+      <Typography
+        variant="h4"
+        sx={{
+          color: '#ff1744',
+          letterSpacing: 3,
+          mb: 1,
+        }}
+      >
         {post.POST_TITLE}
+      </Typography>
+
+      <Typography
+        variant="body2"
+        sx={{
+          color: '#bbb',
+          fontStyle: 'italic',
+          fontSize: '0.9rem',
+        }}
+      >
+        by {post.USER_EMAIL}
+      </Typography>
+
+      <Typography
+        variant="caption"
+        sx={{
+          color: '#666',
+          fontSize: '0.75rem',
+          mt: 0.5,
+          display: 'block',
+        }}
+      >
+        {formatDateTime(post.CDATE_TIME)}
       </Typography>
 
       <Typography variant="body1" sx={{ whiteSpace: 'pre-line', mb: 2 }}>
         {post.POST_CONTENT}
       </Typography>
 
-      <Typography>{formatDateTime(post.CDATE_TIME)}</Typography>
+
 
       {imgList && imgList.map((item, idx) => (
         <Box key={idx} mb={2}>
@@ -311,10 +341,24 @@ function FeedDetail() {
                         </Box>
                       </Box>
                     ) : (
-                      <ListItemText primary={comment.NICK_NAME} secondary={comment.CONTENT} />
+                      <ListItem alignItems="flex-start" sx={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
+                        <Box sx={{ width: '100%', display: 'flex', justifyContent: 'space-between' }}>
+                          <Typography sx={{ fontWeight: 'bold', color: '#ff1744' }}>
+                            {comment.NICK_NAME}
+                          </Typography>
+                          <Typography sx={{ fontSize: '0.75rem', color: '#888' }}>
+                            {formatDateTime(comment.CDATE_TIME)}
+                          </Typography>
+                        </Box>
+                        <Typography
+                          variant="body2"
+                          sx={{ mt: 0.5, whiteSpace: 'pre-wrap', color: '#ddd' }}
+                        >
+                          {comment.CONTENT}
+                        </Typography>
+                      </ListItem>
                     )}
                   </ListItem>
-                  <Typography>{formatDateTime(comment.CDATE_TIME)}</Typography>
                   <Box textAlign="right" px={1}>
 
                     {(sessionUser.email === comment.USER_EMAIL || sessionUser.role === 'ADMIN') && (
@@ -326,14 +370,40 @@ function FeedDetail() {
                             setEditContent(comment.CONTENT); // 기존 내용 채워 넣기
 
                           }}
-                          sx={{ fontSize: 12, color: '#888' }}
+                          sx={{
+                            backgroundColor: '#1e1e1e',
+                            color: '#ccc',
+                            border: '1px solid #333',
+                            fontWeight: 'bold',
+                            fontSize: '0.9rem',
+                            borderRadius: 2,
+                            ml: 2,
+                            '&:hover': {
+                              backgroundColor: '#2a2a2a',
+                              color: '#ff1744',
+                              borderColor: '#ff1744'
+                            }
+                          }}
                         >
                           수정
                         </Button>
                         <Button
                           size="small"
                           onClick={() => handleDeleteComment(comment.COMMENT_ID)}
-                          sx={{ fontSize: 12, color: '#888' }}
+                          sx={{
+                            backgroundColor: '#1e1e1e',
+                            color: '#ccc',
+                            border: '1px solid #333',
+                            fontWeight: 'bold',
+                            fontSize: '0.9rem',
+                            borderRadius: 2,
+                            ml: 1,
+                            '&:hover': {
+                              backgroundColor: '#2a2a2a',
+                              color: '#ff1744',
+                              borderColor: '#ff1744'
+                            }
+                          }}
                         >
                           삭제
                         </Button>
@@ -351,35 +421,72 @@ function FeedDetail() {
                   {comments
                     .filter(r => r.PARENT_ID === comment.COMMENT_ID)
                     .map(reply => (
-                      <ListItem key={reply.COMMENT_ID} sx={{ pl: 6, backgroundColor: '#1a1a1a' }}>
-                        <ListItemAvatar>
-                          <Avatar src={reply.PROFILE_IMG ? "http://localhost:3005/" + reply.PROFILE_IMG : ""} />
-                        </ListItemAvatar>
-                        <ListItemText primary={`↪️ ${reply.NICK_NAME}`} secondary={reply.CONTENT} />
+                      <ListItem
+                        key={reply.COMMENT_ID}
+                        sx={{
+                          pl: 6,
+                          pr: 2,
+                          py: 2,
+                          my: 1,
+                          backgroundColor: '#1a1a1a',
+                          borderLeft: '3px solid #ff1744',
+                          borderRadius: 2,
+                          flexDirection: 'column',
+                          alignItems: 'flex-start'
+                        }}
+                      >
+                        <Box sx={{ display: 'flex', justifyContent: 'space-between', width: '100%' }}>
+                          <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                            <Avatar
+                              src={reply.PROFILE_IMG ? "http://localhost:3005/" + reply.PROFILE_IMG : ""}
+                              sx={{ width: 32, height: 32, mr: 1 }}
+                            />
+                            <Typography sx={{ fontWeight: 'bold', color: '#ff6f61' }}>
+                              ↪️ {reply.NICK_NAME}
+                            </Typography>
+                          </Box>
+                          <Typography sx={{ fontSize: '0.75rem', color: '#888' }}>
+                            {formatDateTime(reply.CDATE_TIME)}
+                          </Typography>
+                        </Box>
+
+                        <Typography
+                          variant="body2"
+                          sx={{ mt: 1, whiteSpace: 'pre-wrap', color: '#ccc', width: '100%' }}
+                        >
+                          {reply.CONTENT}
+                        </Typography>
+
                         {(sessionUser.email === reply.USER_EMAIL || sessionUser.role === 'ADMIN') && (
-                          <>
+                          <Box sx={{ mt: 1, textAlign: 'right', width: '100%' }}>
                             <Button
                               size="small"
                               onClick={() => {
-                                setEditModeId(comment.COMMENT_ID);
-                                setEditContent(comment.CONTENT); // 기존 내용 채워 넣기
+                                setEditModeId(reply.COMMENT_ID);
+                                setEditContent(reply.CONTENT);
                               }}
-                              sx={{ fontSize: 12, color: '#888' }}
+                              sx={{
+                                fontSize: 12,
+                                color: '#bbb',
+                                '&:hover': { color: '#ff1744' }
+                              }}
                             >
                               수정
                             </Button>
                             <Button
                               size="small"
                               onClick={() => handleDeleteComment(reply.COMMENT_ID)}
-                              sx={{ fontSize: 12, color: '#888' }}
+                              sx={{
+                                fontSize: 12,
+                                color: '#bbb',
+                                '&:hover': { color: '#ff1744' }
+                              }}
                             >
                               삭제
                             </Button>
-                          </>
+                          </Box>
                         )}
                       </ListItem>
-
-
                     ))}
 
 

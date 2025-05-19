@@ -1,5 +1,8 @@
 import React, { useState } from 'react';
-import { Box, TextField, Button, Avatar, Typography, Dialog, DialogTitle, DialogContent, DialogActions } from '@mui/material';
+import {
+  Box, TextField, Button, Avatar, Typography,
+  Dialog, DialogTitle, DialogContent, DialogActions
+} from '@mui/material';
 import DMList from './DMList';
 import DMChat from './DMChat';
 import { jwtDecode } from 'jwt-decode';
@@ -8,18 +11,15 @@ function DMPage() {
   const token = localStorage.getItem('token');
   const sessionUser = token ? jwtDecode(token) : null;
   const myEmail = sessionUser?.email;
-  const [targetEmail, setTargetEmail] = useState(null);
 
-  // ✅ 검색/모달 상태들
+  const [targetEmail, setTargetEmail] = useState(null);
   const [keyword, setKeyword] = useState('');
   const [results, setResults] = useState([]);
   const [selectedUser, setSelectedUser] = useState(null);
   const [msg, setMsg] = useState('');
   const [open, setOpen] = useState(false);
+  const [refreshKey, setRefreshKey] = useState(0);
 
-  const [refreshKey, setRefreshKey] = useState(0); // ✅ DMList 강제 리렌더링용 상태값
-
-  // 🔍 유저 검색 요청
   const handleSearch = async () => {
     const res = await fetch(`http://localhost:3005/pro-chat/search?keyword=${keyword}`);
     const json = await res.json();
@@ -28,7 +28,6 @@ function DMPage() {
     }
   };
 
-  // 💬 메시지 전송 후 상태 갱신
   const handleSend = async () => {
     await fetch('http://localhost:3005/pro-chat', {
       method: 'POST',
@@ -40,53 +39,113 @@ function DMPage() {
       })
     });
 
-    // ✅ 모달 닫고 상태 초기화
     setOpen(false);
     setMsg('');
     setResults([]);
     setKeyword('');
-
-    // ✅ 대화창 이동 + 목록 리렌더링 트리거
     setTargetEmail(selectedUser.USER_EMAIL);
-    setRefreshKey(prev => prev + 1); // ✅ DMList 다시 불러오게 함
+    setRefreshKey(prev => prev + 1);
   };
 
   return (
-    <Box sx={{ marginLeft: '240px' }} height="100vh" bgcolor="#111" color="#fff">
-      
-      {/* 🔍 상단 검색창 */}
-      <Box display="flex" gap={1} p={2}>
+    <Box
+      sx={{
+        marginLeft: '240px',
+        minHeight: '100vh',
+        bgcolor: '#111',
+        color: '#fff',
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        px: 2
+      }}
+    >
+      {/* 🔍 검색창 */}
+      <Box
+        display="flex"
+        gap={1}
+        mt={4}
+        mb={2}
+        sx={{ width: '100%', maxWidth: 700 }}
+      >
         <TextField
-          label="유저 검색 (닉네임/이메일)"
+          fullWidth
           size="small"
           variant="outlined"
           value={keyword}
           onChange={(e) => setKeyword(e.target.value)}
-          sx={{ backgroundColor: '#fff', borderRadius: 1 }}
+          placeholder="닉네임 또는 이메일 검색"
+          sx={{
+            backgroundColor: '#1a1a1a',
+            borderRadius: 1,
+            input: { color: '#fff' },
+            '& .MuiOutlinedInput-notchedOutline': {
+              borderColor: '#444'
+            },
+            '&:hover .MuiOutlinedInput-notchedOutline': {
+              borderColor: '#ff1744'
+            },
+            '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+              borderColor: '#ff1744'
+            }
+          }}
         />
-        <Button variant="contained" onClick={handleSearch}>검색</Button>
+        <Button
+          variant="contained"
+          onClick={handleSearch}
+          sx={{
+            backgroundColor: '#d50000',
+            '&:hover': { backgroundColor: '#ff1744' }
+          }}
+        >
+          검색
+        </Button>
       </Box>
 
       {/* 🔍 검색 결과 리스트 */}
-      {results.map((user) => (
-        <Box key={user.USER_EMAIL} display="flex" alignItems="center" p={1} borderBottom="1px solid #444" ml={2}>
-          <Avatar src={user.PROFILE_IMG || '/default-profile.png'} />
-          <Box ml={2} flexGrow={1}>
-            <Typography>{user.NICK_NAME}</Typography>
-            <Typography variant="caption">{user.USER_EMAIL}</Typography>
+      <Box sx={{ width: '100%', maxWidth: 700 }}>
+        {results.map((user) => (
+          <Box
+            key={user.USER_EMAIL}
+            display="flex"
+            alignItems="center"
+            p={1}
+            borderBottom="1px solid #444"
+          >
+            <Avatar src={user.PROFILE_IMG || '/default-profile.png'} />
+            <Box ml={2} flexGrow={1}>
+              <Typography>{user.NICK_NAME}</Typography>
+              <Typography variant="caption" sx={{ color: '#999' }}>{user.USER_EMAIL}</Typography>
+            </Box>
+            <Button
+              variant="outlined"
+              onClick={() => {
+                setSelectedUser(user);
+                setOpen(true);
+              }}
+              sx={{
+                color: '#fff',
+                borderColor: '#666',
+                '&:hover': {
+                  borderColor: '#ff1744',
+                  color: '#ff1744'
+                }
+              }}
+            >
+              💬 속삭이기
+            </Button>
           </Box>
-          <Button variant="outlined" onClick={() => { setSelectedUser(user); setOpen(true); }}>
-            💬 속삭이기
-          </Button>
-        </Box>
-      ))}
+        ))}
+      </Box>
 
       {/* 💬 메시지 입력 모달 */}
       <Dialog open={open} onClose={() => setOpen(false)}>
         <DialogTitle>{selectedUser?.NICK_NAME}에게 속삭이기</DialogTitle>
         <DialogContent>
           <TextField
-            fullWidth multiline rows={4}
+            fullWidth
+            multiline
+            rows={4}
             placeholder="메시지를 입력하세요"
             value={msg}
             onChange={(e) => setMsg(e.target.value)}
@@ -99,8 +158,13 @@ function DMPage() {
       </Dialog>
 
       {/* 📬 DM 목록 + 채팅창 */}
-      <Box display="flex" height="80%">
-        {/* ✅ refreshKey를 DMList에 전달 */}
+      <Box
+        display="flex"
+        justifyContent="center"
+        alignItems="flex-start"
+        mt={4}
+        sx={{ width: '100%', maxWidth: 1000, minHeight: '500px' }}
+      >
         <DMList myEmail={myEmail} onSelectUser={setTargetEmail} refreshKey={refreshKey} />
         <DMChat myEmail={myEmail} targetEmail={targetEmail} reloadKey={refreshKey} />
       </Box>

@@ -81,9 +81,31 @@ function NotificationList() {
       }}
     >
       <Box>
-        <Typography variant="h5" sx={{ mb: 2, fontFamily: 'Creepster, cursive', color: '#ff1744' }}>
-          🔔 알림
+        <Typography
+          variant="h5"
+          align="center"
+          sx={{
+            mb: 3,
+            fontFamily: 'Creepster, cursive',
+            color: '#ff1744',
+            letterSpacing: 2,
+            textShadow: '1px 1px 4px rgba(0,0,0,0.8)',
+            animation: 'flicker 2.5s infinite alternate',
+          }}
+        >
+          🔔 WHISPERS
         </Typography>
+
+        <style>
+          {`
+    @keyframes flicker {
+      0% { opacity: 1; }
+      50% { opacity: 0.85; }
+      80% { opacity: 0.6; transform: scale(1.01); }
+      100% { opacity: 1; }
+    }
+  `}
+        </style>
 
         <List>
           {notifications.map((noti) => (

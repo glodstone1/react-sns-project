@@ -125,10 +125,30 @@ function MyFollowersList() {
       }}
     >
       <Box sx={{ maxWidth: 500, margin: '0 auto', mt: 4, px: 2 }}>
-        <Typography variant="h5" sx={{ mb: 1, fontFamily: 'Creepster, cursive', color: '#ff1744' }}>
-          👁️ {userEmail === sessionUserEmail ? '나의 추종자' : `${userEmail}의 추종자`}
+        <Typography
+          variant="h5"
+          align="center"
+          sx={{
+            mb: 3,
+            fontFamily: 'Creepster, cursive',
+            color: '#ff1744',
+            letterSpacing: 2,
+            textShadow: '1px 1px 4px rgba(0,0,0,0.8)',
+            animation: 'flicker 2.5s infinite alternate',
+          }}
+        >
+          👁️ {userEmail === sessionUserEmail ? 'My Followers' : `${userEmail}’s Followers`}
         </Typography>
-
+        <style>
+          {`
+    @keyframes flicker {
+      0% { opacity: 1; }
+      50% { opacity: 0.85; }
+      80% { opacity: 0.6; transform: scale(1.01); }
+      100% { opacity: 1; }
+    }
+  `}
+        </style>
         <TextField
           size="small"
           fullWidth
@@ -195,7 +215,7 @@ function MyFollowersList() {
           ))}
           {followerUsers.length === 0 && (
             <Typography sx={{ textAlign: 'center', color: '#aaa', mt: 4 }}>
-              현재 동행 중인 사람이 없습니다.
+              현재 추종 중인 사람이 없습니다.
             </Typography>
           )}
         </List>

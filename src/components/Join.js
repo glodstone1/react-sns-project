@@ -55,7 +55,7 @@ function Join() {
   };
 
   return (
-    <Container maxWidth="xs" sx={{ mt: 8}}>
+    <Container maxWidth="xs" sx={{ mt: 8 }}>
       <Paper elevation={0} sx={{
         p: 4,
         color: "#ccc", // 텍스트 흐리게
@@ -67,16 +67,34 @@ function Join() {
         backdropFilter: 'blur(5px)'
       }}>
         <Box component="form" onSubmit={handleLogin} noValidate autoComplete="off">
-          <Typography variant="h4" gutterBottom sx={{
-            fontFamily: 'Cinzel',
-            color: '#e53935',
-            textAlign: "center"
-          }}>
-            새로운 영혼을 초대합니다
+          <Typography
+            variant="h4"
+            gutterBottom
+            sx={{
+              fontFamily: 'Cinzel',
+              color: '#e53935',
+              textAlign: "center",
+              letterSpacing: 2,
+              textShadow: '1px 1px 3px rgba(0,0,0,0.8)',
+              animation: 'flicker 2.5s infinite alternate',
+            }}
+          >
+            WELCOME
           </Typography>
           <Typography variant="body2" sx={{ textAlign: "center", mb: 2, color: "#888" }}>
             여긴 당신의 이야기가 시작되는 곳입니다.
           </Typography>
+
+          <style>
+            {`
+    @keyframes flicker {
+      0% { opacity: 1; }
+      50% { opacity: 0.85; }
+      80% { opacity: 0.6; transform: scale(1.01); }
+      100% { opacity: 1; }
+    }
+  `}
+          </style>
 
           <TextField
             label="이메일*"
@@ -124,7 +142,7 @@ function Join() {
           />
 
           <FormControl component="fieldset" fullWidth margin="normal">
-            <FormLabel sx={{ color: "#aaa", mb: 1 }}>공포유형*</FormLabel>
+            <FormLabel sx={{ color: "#aaa", mb: 1 }}>선호유형</FormLabel>
             <RadioGroup
               row
               value={fearType}
@@ -150,7 +168,7 @@ function Join() {
           </Button>
 
           <Typography variant="body2" sx={{ mt: 2, textAlign: "center", fontSize: "0.8rem", color: "#777" }}>
-            이미 어둠에 발을 들이셨나요? <Link to="/prologin" style={{ color: "#e53935" }}>로그인</Link>
+            이미 회원이신가요? <Link to="/prologin" style={{ color: "#e53935" }}>로그인</Link>
           </Typography>
         </Box>
       </Paper>
