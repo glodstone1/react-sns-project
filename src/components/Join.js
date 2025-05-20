@@ -2,8 +2,9 @@ import React, { useState } from 'react';
 import {
   TextField, Button, Container, Typography, Box,
   FormControl, FormLabel, RadioGroup,
-  FormControlLabel, Radio, Paper
+  FormControlLabel, Radio, Paper, InputAdornment, IconButton
 } from '@mui/material';
+import { Visibility, VisibilityOff } from '@mui/icons-material';
 import { Link, useNavigate } from 'react-router-dom';
 import '@fontsource/cinzel'; // 고딕 느낌 폰트 추가
 
@@ -16,6 +17,7 @@ function Join() {
   const [intro, setIntro] = useState("");
   const [fearType, setFearType] = useState("");
   const navigate = useNavigate();
+  const [showPassword, setShowPassword] = useState(false);
 
   const fearOptions = [
     { label: "실화", value: "real" },
@@ -52,6 +54,10 @@ function Join() {
           alert(data.message);
         }
       });
+  };
+
+  const togglePasswordVisibility = () => {
+    setShowPassword(!showPassword);
   };
 
   return (
@@ -105,19 +111,41 @@ function Join() {
           />
           <TextField
             label="비밀번호*"
-            type="password"
-            fullWidth margin="normal"
+            type={showPassword ? 'text' : 'password'}
+            fullWidth
+            margin="normal"
             InputLabelProps={{ style: { color: '#888' } }}
-            InputProps={{ style: { color: '#eee', backgroundColor: "#111" } }}
-            value={password} onChange={(e) => setPassword(e.target.value)}
+            InputProps={{
+              style: { color: '#eee', backgroundColor: '#111' },
+              endAdornment: (
+                <InputAdornment position="end">
+                  <IconButton onClick={togglePasswordVisibility} edge="end">
+                    {showPassword ? <VisibilityOff /> : <Visibility />}
+                  </IconButton>
+                </InputAdornment>
+              )
+            }}
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
           />
           <TextField
             label="비밀번호 확인*"
-            type="password"
-            fullWidth margin="normal"
+            type={showPassword ? 'text' : 'password'}
+            fullWidth
+            margin="normal"
             InputLabelProps={{ style: { color: '#888' } }}
-            InputProps={{ style: { color: '#eee', backgroundColor: "#111" } }}
-            value={pwdCheck} onChange={(e) => setPwdCheck(e.target.value)}
+            InputProps={{
+              style: { color: '#eee', backgroundColor: '#111' },
+              endAdornment: (
+                <InputAdornment position="end">
+                  <IconButton onClick={togglePasswordVisibility} edge="end">
+                    {showPassword ? <VisibilityOff /> : <Visibility />}
+                  </IconButton>
+                </InputAdornment>
+              )
+            }}
+            value={pwdCheck}
+            onChange={(e) => setPwdCheck(e.target.value)}
           />
           <TextField
             label="이름*"
