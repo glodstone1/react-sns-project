@@ -24,7 +24,7 @@
 
 | 구분 | 기술 |
 |------|------|
-| **Frontend** | React, JavaScript, MUI(Material UI), Socket.IO-Client |
+| **Frontend** | React, MUI(Material UI), Socket.IO-Client |
 | **Backend** | Node.js, Express.js, JWT, Socket.IO |
 | **Database** | MySQL |
 | **개발 환경** | VSCode, GitHub, HeidiSQL |
