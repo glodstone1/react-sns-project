@@ -5,6 +5,7 @@ import {
   Avatar, Button, Box, Typography, TextField, Paper, Dialog, DialogTitle, DialogActions
 } from '@mui/material';
 import axios from 'axios';
+import { jwtDecode } from 'jwt-decode';
 
 function MyFollowersList() {
   const [followerUsers, setFollowerUsers] = useState([]);
@@ -16,16 +17,23 @@ function MyFollowersList() {
   const navigate = useNavigate();
   const { email } = useParams();
 
-  const sessionUserEmail = JSON.parse(atob(localStorage.getItem('token').split('.')[1])).email;
+  let sessionUserEmail = null;
+  try {
+    const token = localStorage.getItem("token");
+    sessionUserEmail = token ? jwtDecode(token).email : null;
+  } catch (e) {
+    console.error("JWT 파싱 오류:", e);
+    localStorage.removeItem("token");
+    window.location.href = "/login";
+  }
+
   const userEmail = email || sessionUserEmail;
 
   const fetchFollowerUsers = async (searchTerm = '') => {
     try {
       const res = await axios.get('http://localhost:3005/pro-user/follow-list', {
         params: { keyword: searchTerm, email: userEmail, type: 'followers' },
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem('token')}`
-        }
+        headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
       });
       setFollowerUsers(res.data);
     } catch (err) {
@@ -37,9 +45,7 @@ function MyFollowersList() {
     try {
       const res = await axios.get('http://localhost:3005/pro-user/follow-list', {
         params: { email: sessionUserEmail, type: 'following' },
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem('token')}`
-        }
+        headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
       });
       setMyFollowList(res.data.map(user => user.USER_EMAIL));
     } catch (err) {
@@ -48,8 +54,10 @@ function MyFollowersList() {
   };
 
   useEffect(() => {
-    fetchFollowerUsers();
-    fetchMyFollowList();
+    if (userEmail) {
+      fetchFollowerUsers();
+      fetchMyFollowList();
+    }
   }, [userEmail]);
 
   const handleSearch = (e) => {
@@ -68,10 +76,7 @@ function MyFollowersList() {
   const handleUnfollow = async () => {
     try {
       await axios.delete('http://localhost:3005/pro-follow', {
-        data: {
-          follower: sessionUserEmail,
-          following: selectedEmail
-        },
+        data: { follower: sessionUserEmail, following: selectedEmail },
         headers: {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${localStorage.getItem('token')}`
@@ -139,16 +144,15 @@ function MyFollowersList() {
         >
           👁️ {userEmail === sessionUserEmail ? 'My Followers' : `${userEmail}’s Followers`}
         </Typography>
-        <style>
-          {`
-    @keyframes flicker {
-      0% { opacity: 1; }
-      50% { opacity: 0.85; }
-      80% { opacity: 0.6; transform: scale(1.01); }
-      100% { opacity: 1; }
-    }
-  `}
-        </style>
+        <style>{`
+          @keyframes flicker {
+            0% { opacity: 1; }
+            50% { opacity: 0.85; }
+            80% { opacity: 0.6; transform: scale(1.01); }
+            100% { opacity: 1; }
+          }
+        `}</style>
+
         <TextField
           size="small"
           fullWidth
@@ -190,7 +194,7 @@ function MyFollowersList() {
                 />
               </Box>
               {user.USER_EMAIL === sessionUserEmail ? (
-                <Button disabled sx={{ opacity: 0.8 }}>🕯️ 나</Button> // ✅ 본인일 경우 비활성화
+                <Button disabled sx={{ opacity: 0.8 }}>🕯️ 나</Button>
               ) : myFollowList.includes(user.USER_EMAIL) ? (
                 <Button
                   variant="outlined"
